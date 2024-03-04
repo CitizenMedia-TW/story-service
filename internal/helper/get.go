@@ -40,14 +40,17 @@ func (h *Helper) GetOneStory(ctx context.Context, in *story.GetOneStoryRequest) 
 	}
 
 	res := &story.GetOneStoryResponse{
-		Author:    result.AuthorName,
-		AuthorId:  result.AuthorId,
-		Content:   result.Content,
-		Comments:  comments,
-		Title:     result.Title,
-		SubTitle:  result.SubTitle,
-		CreatedAt: timestamppb.New(result.CreatedAt),
-		Tags:      result.Tags,
+		Message: "Success",
+		Story: &story.StoryContent{
+			Author:    result.AuthorName,
+			AuthorId:  result.AuthorId,
+			Content:   result.Content,
+			Comments:  comments,
+			Title:     result.Title,
+			SubTitle:  result.SubTitle,
+			CreatedAt: timestamppb.New(result.CreatedAt),
+			Tags:      result.Tags,
+		},
 	}
 
 	return res, nil
@@ -64,5 +67,5 @@ func (h *Helper) GetRecommended(ctx context.Context, in *story.GetRecommendedReq
 		ids[i] = r.Id
 	}
 
-	return &story.GetRecommendedResponse{StoryIdList: ids}, nil
+	return &story.GetRecommendedResponse{Message: "Success", StoryIdList: ids}, nil
 }

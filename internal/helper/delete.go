@@ -14,7 +14,7 @@ func (h *Helper) DeleteComment(ctx context.Context, in *story.DeleteCommentReque
 		return nil, err
 	}
 
-	return &story.DeleteCommentResponse{Message: "success"}, nil
+	return &story.DeleteCommentResponse{Message: "Success"}, nil
 }
 
 func (h *Helper) DeleteStory(ctx context.Context, in *story.DeleteStoryRequest) (*story.DeleteStoryResponse, error) {
@@ -25,7 +25,7 @@ func (h *Helper) DeleteStory(ctx context.Context, in *story.DeleteStoryRequest) 
 		return nil, err
 	}
 
-	return &story.DeleteStoryResponse{Message: "success"}, nil
+	return &story.DeleteStoryResponse{Message: "Success"}, nil
 }
 
 func (h *Helper) DeleteSubComment(ctx context.Context, in *story.DeleteSubCommentRequest) (*story.DeleteSubCommentResponse, error) {
@@ -36,5 +36,5 @@ func (h *Helper) DeleteSubComment(ctx context.Context, in *story.DeleteSubCommen
 		return nil, err
 	}
 
-	return &story.DeleteSubCommentResponse{Message: "success"}, nil
+	return &story.DeleteSubCommentResponse{Message: "Success"}, nil
 }
