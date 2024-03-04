@@ -77,10 +77,11 @@ func TestCreateAndGetStory(t *testing.T) {
 
 	storyData := getStory(t, token, storyId)
 
-	assert.Equal(t, "www", storyData.Author)
-	assert.Equal(t, testUserId, storyData.AuthorId)
-	assert.Equal(t, "test content", storyData.Content)
-	assert.Equal(t, "test title", storyData.Title)
+	assert.Equal(t, "Success", storyData.Message)
+	assert.Equal(t, "www", storyData.Story.Author)
+	assert.Equal(t, testUserId, storyData.Story.AuthorId)
+	assert.Equal(t, "test content", storyData.Story.Content)
+	assert.Equal(t, "test title", storyData.Story.Title)
 
 	deleteReq := &story.DeleteStoryRequest{DeleterId: testUserId, StoryId: storyId}
 	b := new(bytes.Buffer)
@@ -124,9 +125,9 @@ func TestCreateComment(t *testing.T) {
 	commentId := createComment(t, token, storyId)
 
 	storyData := getStory(t, token, storyId)
-	assert.Equal(t, storyData.Comments[0].CommenterId, testUserId)
-	assert.Equal(t, storyData.Comments[0].Content, "test comment")
-	assert.Equal(t, storyData.Comments[0].Id, commentId)
+	assert.Equal(t, storyData.Story.Comments[0].CommenterId, testUserId)
+	assert.Equal(t, storyData.Story.Comments[0].Content, "test comment")
+	assert.Equal(t, storyData.Story.Comments[0].Id, commentId)
 
 	deleteReq := &story.DeleteCommentRequest{DeleterId: testUserId, CommentId: commentId}
 	b := new(bytes.Buffer)
@@ -140,5 +141,5 @@ func TestCreateComment(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.StatusCode, response.Status)
 
 	storyData = getStory(t, token, storyId)
-	assert.Empty(t, storyData.Comments)
+	assert.Empty(t, storyData.Story.Comments)
 }
