@@ -37,13 +37,7 @@
 <details>
 <summary><code>GET</code> <code><b>/story</b></code> <code>(Get a story by given id)</code></summary>
 
-##### Headers
-
-> | key           | value          | description   |
-> | ------------- | -------------- | ------------- |
-> | Authorization | `Bearer token` | The jwt token |
-
-##### Body (application/json)
+##### Params
 
 > | key     | required | data type | description           |
 > | ------- | -------- | --------- | --------------------- |
@@ -89,9 +83,9 @@ type story = {
 
 ##### Responses
 
-> | http code   | content-type       | response                 |
-> | ----------- | ------------------ | ------------------------ |
-> | `200`       | `application/json` | `{"message": "Success"}` |
+> | http code    | content-type       | response                 |
+> | ------------ | ------------------ | ------------------------ |
+> | `200`        | `application/json` | `{"message": "Success"}` |
 > | `400`, `500` | `text/plain`       | N/A                      |
 
 </details>
@@ -109,19 +103,19 @@ type story = {
 > | ------------- | -------------- | ------------- |
 > | Authorization | `Bearer token` | The jwt token |
 
-##### Body (application/json)
+##### Params
 
 > | key    | required | data type | description                 |
 > | ------ | -------- | --------- | --------------------------- |
 > | userId | true     | string    | ObjectId of the user        |
-> | count  | true     | string    | Number of story to retrieve |
-> | skip   | true     | string    | --                          |
+> | count  | true     | int       | Number of story to retrieve |
+> | skip   | true     | int       | --                          |
 
 ##### Responses
 
-> | http code   | content-type       | response                                          |
-> | ----------- | ------------------ | ------------------------------------------------- |
-> | `200`       | `application/json` | `{"message": "Success", "storyIdList": string[]}` |
+> | http code    | content-type       | response                                          |
+> | ------------ | ------------------ | ------------------------------------------------- |
+> | `200`        | `application/json` | `{"message": "Success", "storyIdList": string[]}` |
 > | `400`, `500` | `text/plain`       | N/A                                               |
 
 </details>
@@ -149,9 +143,9 @@ type story = {
 
 ##### Responses
 
-> | http code          | content-type       | response                                                  |
-> | ------------------ | ------------------ | --------------------------------------------------------- |
-> | `200`              | `application/json` | `{"message": "Success", "commentId: "id of the comment"}` |
+> | http code           | content-type       | response                                                  |
+> | ------------------- | ------------------ | --------------------------------------------------------- |
+> | `200`               | `application/json` | `{"message": "Success", "commentId: "id of the comment"}` |
 > | `400`, `401`, `500` | `text/plain`       | N/A                                                       |
 
 </details>
@@ -174,9 +168,9 @@ type story = {
 
 ##### Responses
 
-> | http code          | content-type       | response                 |
-> | ------------------ | ------------------ | ------------------------ |
-> | `200`              | `application/json` | `{"message": "Success"}` |
+> | http code           | content-type       | response                 |
+> | ------------------- | ------------------ | ------------------------ |
+> | `200`               | `application/json` | `{"message": "Success"}` |
 > | `400`, `401`, `500` | `text/plain`       | N/A                      |
 
 </details>
@@ -204,9 +198,9 @@ type story = {
 
 ##### Responses
 
-> | http code   | content-type       | response                                                        |
-> | ----------- | ------------------ | --------------------------------------------------------------- |
-> | `200`       | `application/json` | `{"message": "Success", "subCommentId: "id of the subComment"}` |
+> | http code    | content-type       | response                                                        |
+> | ------------ | ------------------ | --------------------------------------------------------------- |
+> | `200`        | `application/json` | `{"message": "Success", "subCommentId: "id of the subComment"}` |
 > | `401`, `500` | `text/plain`       | N/A                                                             |
 
 </details>
