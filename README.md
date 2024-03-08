@@ -92,7 +92,7 @@ type story = {
 > | http code   | content-type       | response                 |
 > | ----------- | ------------------ | ------------------------ |
 > | `200`       | `application/json` | `{"message": "Success"}` |
-> | `400`, 500` | `text/plain`       | N/A                      |
+> | `400`, `500` | `text/plain`       | N/A                      |
 
 </details>
 
@@ -122,7 +122,7 @@ type story = {
 > | http code   | content-type       | response                                          |
 > | ----------- | ------------------ | ------------------------------------------------- |
 > | `200`       | `application/json` | `{"message": "Success", "storyIdList": string[]}` |
-> | `400`, 500` | `text/plain`       | N/A                                               |
+> | `400`, `500` | `text/plain`       | N/A                                               |
 
 </details>
 
@@ -152,7 +152,7 @@ type story = {
 > | http code          | content-type       | response                                                  |
 > | ------------------ | ------------------ | --------------------------------------------------------- |
 > | `200`              | `application/json` | `{"message": "Success", "commentId: "id of the comment"}` |
-> | `400`, `401`, 500` | `text/plain`       | N/A                                                       |
+> | `400`, `401`, `500` | `text/plain`       | N/A                                                       |
 
 </details>
 
@@ -177,7 +177,7 @@ type story = {
 > | http code          | content-type       | response                 |
 > | ------------------ | ------------------ | ------------------------ |
 > | `200`              | `application/json` | `{"message": "Success"}` |
-> | `400`, `401`, 500` | `text/plain`       | N/A                      |
+> | `400`, `401`, `500` | `text/plain`       | N/A                      |
 
 </details>
 
@@ -207,7 +207,7 @@ type story = {
 > | http code   | content-type       | response                                                        |
 > | ----------- | ------------------ | --------------------------------------------------------------- |
 > | `200`       | `application/json` | `{"message": "Success", "subCommentId: "id of the subComment"}` |
-> | `401`, 500` | `text/plain`       | N/A                                                             |
+> | `401`, `500` | `text/plain`       | N/A                                                             |
 
 </details>
 
