@@ -2,34 +2,29 @@ package database
 
 import (
 	"context"
-	"errors"
-	"grpc-story-service/internal/models"
-	"log"
-
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
 )
 
-// Delete comment
-func (db *Database) DeleteComment(s primitive.ObjectID, c primitive.ObjectID) error {
-	filter := bson.M{"_id": s}
-	update := bson.M{
-		"$pull": bson.M{
-			"comments": bson.M{
-				"_id": c,
-			},
-		},
+func (db *Database) DeleteComment(ctx context.Context, commentId string) error {
+	oid, err := primitive.ObjectIDFromHex(commentId)
+	if err != nil {
+		return err
 	}
-
-	result, err := db.database.UpdateOne(context.Background(), filter, update)
-	if result.MatchedCount == 0 {
-		log.Println("Commented story id not found")
-		return errors.New("Commented story id not found")
+	result := db.database.Collection(CommentCollection).FindOneAndDelete(ctx, bson.M{"_id": oid})
+	if result.Err() != nil {
+		log.Println("Error in DeleteComment")
+		return result.Err()
 	}
-	if result.ModifiedCount == 0 {
-		log.Println("Nothing modified, comment may be deleted or not exists")
-		return errors.New("Nothing modified, comment may be deleted or not exists")
+	comment := CommentEntity{}
+	err = result.Decode(&comment)
+	if err != nil {
+		log.Println("Error in DeleteComment")
+		return err
 	}
+	_, err = db.database.Collection(SubCommentCollection).DeleteMany(ctx, bson.M{"parentId": comment.Id})
 	if err != nil {
 		log.Println("Error in DeleteComment")
 		return err
@@ -37,10 +32,54 @@ func (db *Database) DeleteComment(s primitive.ObjectID, c primitive.ObjectID) er
 	return nil
 }
 
-func (db *Database) DeleteStory(s primitive.ObjectID) error {
-	var story *model.Story
-	err := db.database.FindOneAndDelete(context.Background(), bson.D{primitive.E{Key: "_id", Value: s}}).Decode(&story)
+func (db *Database) DeleteSubComment(ctx context.Context, subCommentId string) error {
+	oid, err := primitive.ObjectIDFromHex(subCommentId)
 	if err != nil {
+		return err
+	}
+	_, err = db.database.Collection(SubCommentCollection).DeleteOne(ctx, bson.M{"_id": oid})
+	if err != nil {
+		log.Println("Error in DeleteSubComment")
+		return err
+	}
+	return nil
+}
+
+func (db *Database) DeleteStory(ctx context.Context, storyId string) error {
+	oid, err := primitive.ObjectIDFromHex(storyId)
+	if err != nil {
+		return err
+	}
+	result, err := db.database.Collection(StoryCollection).DeleteOne(ctx, bson.M{"_id": oid})
+	if err != nil {
+		log.Println("Error in DeleteStory")
+		return err
+	}
+	if result.DeletedCount == 0 {
+		return ErrNotFound
+	}
+	cursor, err := db.database.Collection(CommentCollection).Find(ctx, bson.M{"storyId": oid}, options.Find())
+	if err != nil {
+		log.Println("Error in DeleteStory")
+		return err
+	}
+	defer cursor.Close(ctx)
+	for cursor.Next(ctx) {
+		var commentEntity CommentEntity
+		err = cursor.Decode(&commentEntity)
+		if err != nil {
+			log.Println("Error in DeleteStory")
+			return err
+		}
+		_, err = db.database.Collection(SubCommentCollection).DeleteMany(ctx, bson.M{"parentId": commentEntity.Id})
+		if err != nil {
+			log.Println("Error in DeleteStory")
+			return err
+		}
+	}
+	_, err = db.database.Collection(CommentCollection).DeleteMany(ctx, bson.M{"storyId": oid})
+	if err != nil {
+		log.Println("Error in DeleteStory")
 		return err
 	}
 	return nil
@@ -48,11 +87,22 @@ func (db *Database) DeleteStory(s primitive.ObjectID) error {
 
 // DropCollection drops the collection (for testing purposes)
 func (db *Database) DropCollection() error {
-	err := db.database.Drop(context.Background())
+	err := db.database.Collection(StoryCollection).Drop(context.Background())
 	if err != nil {
 		log.Println("Error in DropCollection")
 		return err
 	}
 
+	err = db.database.Collection(CommentCollection).Drop(context.Background())
+	if err != nil {
+		log.Println("Error in DropCollection")
+		return err
+	}
+
+	err = db.database.Collection(SubCommentCollection).Drop(context.Background())
+	if err != nil {
+		log.Println("Error in DropCollection")
+		return err
+	}
 	return nil
 }

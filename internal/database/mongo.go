@@ -2,7 +2,9 @@ package database
 
 import (
 	"context"
+	"errors"
 	"log"
+	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -10,17 +12,24 @@ import (
 )
 
 type Database struct {
-	database *mongo.Collection
+	database *mongo.Database
 }
 
-func New() *Database {
+func New() Database {
 	db := connect()
-	return &Database{
+	return Database{
 		database: db,
 	}
 }
 
-func connect() *mongo.Collection {
+var ErrNotFound = errors.New("not found in db")
+
+func connect() *mongo.Database {
+	mongoUri, found := os.LookupEnv("MONGO_URI")
+	println(mongoUri)
+	if !found {
+		mongoUri = "mongodb://127.0.0.1:27017/"
+	}
 	log.Println("Connecting to MongoDB...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -31,7 +40,8 @@ func connect() *mongo.Collection {
 	// client, err := mongo.Connect(ctx, clientOptions)
 
 	// Use this for when running locally
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://127.0.0.1:27017/"))
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoUri))
 
 	if err != nil {
 		log.Fatal(err)
@@ -44,7 +54,5 @@ func connect() *mongo.Collection {
 	}
 	log.Println("Connected to MongoDB!")
 
-	collection := client.Database("GolangStoryTest").Collection("grpctest")
-
-	return collection
+	return client.Database("citizen")
 }
