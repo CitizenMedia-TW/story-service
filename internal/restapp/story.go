@@ -56,12 +56,15 @@ func (s RestApp) CreateStory(writer http.ResponseWriter, request *http.Request) 
 }
 
 func (s RestApp) GetOneStory(writer http.ResponseWriter, request *http.Request) {
-	in := &story.GetOneStoryRequest{}
-	err := json.NewDecoder(request.Body).Decode(in)
-	if err != nil {
-		http.Error(writer, err.Error(), http.StatusBadRequest)
-		return
+	storyId := request.URL.Query().Get("storyId")
+	in := &story.GetOneStoryRequest{
+		StoryId: storyId,
 	}
+	// err := json.NewDecoder(request.Body).Decode(in)
+	// if err != nil {
+	// 	http.Error(writer, err.Error(), http.StatusBadRequest)
+	// 	return
+	// }
 	res, err := s.helper.GetOneStory(request.Context(), in)
 	if err != nil {
 		if err == database.ErrNotFound {
