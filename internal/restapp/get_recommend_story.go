@@ -10,16 +10,10 @@ import (
 func (s RestApp) GetRecommendStory(writer http.ResponseWriter, request *http.Request) {
 	userId := request.Context().Value("userId")
 	if userId == nil {
-		http.Error(writer, "UnAuthorized", http.StatusUnauthorized)
-		return
+		// http.Error(writer, "UnAuthorized", http.StatusUnauthorized)
+		// return
+		userId = "1" // Temporarily disable authentication
 	}
-
-	// in := &story.GetRecommendedRequest{}
-	// err := json.NewDecoder(request.Body).Decode(in)
-	// if err != nil {
-	// 	http.Error(writer, err.Error(), http.StatusBadRequest)
-	// 	return
-	// }
 
 	// userId := request.URL.Query().Get("userId")
 	strCount := request.URL.Query().Get("count")
