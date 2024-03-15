@@ -56,6 +56,10 @@ func (h *Helper) GetOneStory(ctx context.Context, in *story.GetOneStoryRequest) 
 	return res, nil
 }
 
+func (h *Helper) GetMyStoryIds(ctx context.Context, user string) ([]string, error) {
+	return h.database.GetUserStoryId(ctx, user)
+}
+
 func (h *Helper) GetRecommended(ctx context.Context, in *story.GetRecommendedRequest) (*story.GetRecommendedResponse, error) {
 	result, err := h.database.GetStories(ctx, in.Skip, in.Count)
 	if err != nil {

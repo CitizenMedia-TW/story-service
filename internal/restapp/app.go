@@ -12,6 +12,8 @@ type RestApp struct {
 	helper helper.Helper
 }
 
+type UserIdContextKey struct{}
+
 func New(authClient auth.AuthServiceClient) RestApp {
 	h := helper.New(authClient)
 
@@ -28,7 +30,7 @@ func (s RestApp) middlewares(next http.Handler) http.Handler {
 
 		if err == nil && res.Message != "Failed" {
 			println(res.Message)
-			r = r.WithContext(context.WithValue(r.Context(), "userId", res.JwtContent.Id))
+			r = r.WithContext(context.WithValue(r.Context(), UserIdContextKey{}, res.JwtContent.Id))
 			r = r.WithContext(context.WithValue(r.Context(), "mail", res.JwtContent.Mail))
 		}
 
