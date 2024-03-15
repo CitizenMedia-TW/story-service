@@ -58,6 +58,7 @@ func (s RestApp) Routes() http.Handler {
 	mux.Handle("/recommend", s.middlewares(http.HandlerFunc(s.GetRecommendStory)))
 	mux.Handle("/comment", s.middlewares(http.HandlerFunc(s.CommentRoute)))
 	mux.Handle("/subComment", s.middlewares(http.HandlerFunc(s.SubCommentRoute)))
+	mux.Handle("/mystory", s.middlewares(http.HandlerFunc(s.MyStoryRoute)))
 
 	return mux
 }
