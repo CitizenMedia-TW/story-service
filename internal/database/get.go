@@ -2,10 +2,11 @@ package database
 
 import (
 	"context"
+	"grpc-story-service/internal/model"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"grpc-story-service/internal/model"
 )
 
 type StoryQuery struct {
@@ -90,7 +91,7 @@ func (db *Database) GetUserStoryId(ctx context.Context, id string) ([]string, er
 		if err != nil {
 			return storyIds, err
 		}
-		storyIds = append(storyIds, cursor.Current.Lookup("_id").ObjectID().String())
+		storyIds = append(storyIds, cursor.Current.Lookup("_id").ObjectID().Hex())
 	}
 	return storyIds, err
 }

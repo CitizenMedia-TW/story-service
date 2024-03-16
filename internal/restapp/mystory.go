@@ -27,7 +27,7 @@ func (s RestApp) GetMyStory(writer http.ResponseWriter, request *http.Request) {
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err = json.NewEncoder(writer).Encode(&StoryIds{StoryIds: stories})
+	err = json.NewEncoder(writer).Encode(stories)
 	if err != nil {
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
 		return
