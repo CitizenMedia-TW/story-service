@@ -2,7 +2,7 @@ package database
 
 import (
 	"context"
-	"grpc-story-service/internal/model"
+	"story-service/internal/model"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"

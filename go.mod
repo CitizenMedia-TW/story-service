@@ -1,4 +1,4 @@
-module grpc-story-service
+module story-service
 
 go 1.21.3
 

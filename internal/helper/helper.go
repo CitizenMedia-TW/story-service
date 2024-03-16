@@ -1,8 +1,8 @@
 package helper
 
 import (
-	"grpc-story-service/internal/database"
-	"grpc-story-service/protobuffs/auth-service"
+	"story-service/internal/database"
+	"story-service/protobuffs/auth-service"
 )
 
 type Helper struct {

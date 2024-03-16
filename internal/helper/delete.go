@@ -2,8 +2,8 @@ package helper
 
 import (
 	"context"
-	"grpc-story-service/protobuffs/story-service"
 	"log"
+	"story-service/protobuffs/story-service"
 )
 
 func (h *Helper) DeleteComment(ctx context.Context, in *story.DeleteCommentRequest) (*story.DeleteCommentResponse, error) {

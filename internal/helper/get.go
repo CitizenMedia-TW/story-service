@@ -2,8 +2,8 @@ package helper
 
 import (
 	"context"
-	"grpc-story-service/protobuffs/story-service"
 	"log"
+	"story-service/protobuffs/story-service"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

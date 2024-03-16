@@ -4,7 +4,7 @@ import (
 	"github.com/joho/godotenv"
 	"log"
 
-	"grpc-story-service/internal/app"
+	"story-service/internal/app"
 )
 
 func main() {
