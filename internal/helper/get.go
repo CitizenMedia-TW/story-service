@@ -77,3 +77,17 @@ func (h *Helper) GetRecommended(ctx context.Context, in *story.GetRecommendedReq
 
 	return &story.GetRecommendedResponse{Message: "Success", StoryIdList: ids}, nil
 }
+
+func (h *Helper) GetLatestStories(ctx context.Context) (*story.GetLatestStoriesResponse, error) {
+	result, err := h.database.GetStories(ctx, 0, 10)
+	if err != nil {
+		return nil, err
+	}
+	var ids []string = make([]string, len(result))
+
+	for i, r := range result {
+		ids[i] = r.Id
+	}
+
+	return &story.GetLatestStoriesResponse{Message: "Success", StoryIdList: ids}, nil
+}
