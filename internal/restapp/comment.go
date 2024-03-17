@@ -2,9 +2,9 @@ package restapp
 
 import (
 	"encoding/json"
-	"grpc-story-service/protobuffs/story-service"
 	"log"
 	"net/http"
+	"story-service/protobuffs/story-service"
 )
 
 func (s RestApp) CommentRoute(writer http.ResponseWriter, request *http.Request) {

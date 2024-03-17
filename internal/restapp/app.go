@@ -2,10 +2,10 @@ package restapp
 
 import (
 	"context"
-	"grpc-story-service/internal/helper"
-	"grpc-story-service/protobuffs/auth-service"
 	"log"
 	"net/http"
+	"story-service/internal/helper"
+	"story-service/protobuffs/auth-service"
 )
 
 type RestApp struct {

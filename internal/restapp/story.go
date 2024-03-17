@@ -2,9 +2,9 @@ package restapp
 
 import (
 	"encoding/json"
-	"grpc-story-service/internal/database"
-	"grpc-story-service/protobuffs/story-service"
 	"net/http"
+	"story-service/internal/database"
+	"story-service/protobuffs/story-service"
 )
 
 func (s RestApp) StoryRoute(writer http.ResponseWriter, request *http.Request) {

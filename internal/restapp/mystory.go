@@ -33,7 +33,3 @@ func (s RestApp) GetMyStory(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 }
-
-type StoryIds struct {
-	StoryIds []string `json:"storyIds"`
-}
