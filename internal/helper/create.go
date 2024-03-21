@@ -2,8 +2,8 @@ package helper
 
 import (
 	"context"
-	"grpc-story-service/internal/database"
-	"grpc-story-service/protobuffs/story-service"
+	"story-service/internal/database"
+	"story-service/protobuffs/story-service"
 )
 
 func (h *Helper) CreateComment(ctx context.Context, in *story.CreateCommentRequest) (*story.CreateCommentResponse, error) {

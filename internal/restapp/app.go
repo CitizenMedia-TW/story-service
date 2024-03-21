@@ -2,15 +2,17 @@ package restapp
 
 import (
 	"context"
-	"grpc-story-service/internal/helper"
-	"grpc-story-service/protobuffs/auth-service"
 	"log"
 	"net/http"
+	"story-service/internal/helper"
+	"story-service/protobuffs/auth-service"
 )
 
 type RestApp struct {
 	helper helper.Helper
 }
+
+type UserIdContextKey struct{}
 
 func New(authClient auth.AuthServiceClient) RestApp {
 	h := helper.New(authClient)
@@ -28,7 +30,7 @@ func (s RestApp) middlewares(next http.Handler) http.Handler {
 
 		if err == nil && res.Message != "Failed" {
 			println(res.Message)
-			r = r.WithContext(context.WithValue(r.Context(), "userId", res.JwtContent.Id))
+			r = r.WithContext(context.WithValue(r.Context(), UserIdContextKey{}, res.JwtContent.Id))
 			r = r.WithContext(context.WithValue(r.Context(), "mail", res.JwtContent.Mail))
 		}
 
@@ -56,6 +58,8 @@ func (s RestApp) Routes() http.Handler {
 	mux.Handle("/recommend", s.middlewares(http.HandlerFunc(s.GetRecommendStory)))
 	mux.Handle("/comment", s.middlewares(http.HandlerFunc(s.CommentRoute)))
 	mux.Handle("/subComment", s.middlewares(http.HandlerFunc(s.SubCommentRoute)))
+	mux.Handle("/mystory", s.middlewares(http.HandlerFunc(s.MyStoryRoute)))
+	mux.Handle("/latest", s.middlewares(http.HandlerFunc(s.LatestRoute)))
 
 	return mux
 }

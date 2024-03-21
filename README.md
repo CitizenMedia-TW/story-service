@@ -4,6 +4,26 @@
 
 ---
 
+### MyStory
+
+<details>
+<summary><code>GET</code> <code><b>/mystory</b></code> <code>(Get stories written by the user)</code></summary>
+
+##### Headers
+
+> | key           | value          | description   |
+> | ------------- | -------------- | ------------- |
+> | Authorization | `Bearer token` | The jwt token |
+
+##### Responses
+
+> | http code    | content-type       | response                                          |
+> | ------------ | ------------------ | ------------------------------------------------- |
+> | `200`        | `application/json` | `{"message": "Success", "storyIdList": string[]}` |
+> | `401`, `500` | `text/plain`       | N/A                                               |
+
+</details>
+
 ### Story
 
 <details>

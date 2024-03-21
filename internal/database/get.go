@@ -2,10 +2,11 @@ package database
 
 import (
 	"context"
+	"story-service/internal/model"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"grpc-story-service/internal/model"
 )
 
 type StoryQuery struct {
@@ -74,8 +75,30 @@ func (db *Database) GetStories(ctx context.Context, skip int32, count int32) ([]
 	return results, nil
 }
 
+func (db *Database) GetUserStoryId(ctx context.Context, id string) ([]string, error) {
+	userId, err := primitive.ObjectIDFromHex(id)
+	var storyIds []string
+	if err != nil {
+		return storyIds, err
+	}
+	cursor, err := db.database.Collection(StoryCollection).Find(ctx, bson.M{"authorId": userId})
+	if err != nil {
+		return storyIds, err
+	}
+	for cursor.Next(ctx) {
+		doc := bson.M{}
+		err = cursor.Decode(&doc)
+		if err != nil {
+			return storyIds, err
+		}
+		storyIds = append(storyIds, cursor.Current.Lookup("_id").ObjectID().Hex())
+	}
+	return storyIds, err
+}
+
 func getStories(ctx context.Context, database *mongo.Database, skip int32, count int32) ([]StoryQuery, error) {
 	pipeline := bson.A{
+		bson.D{{"$sort", bson.M{"_id": -1}}},
 		bson.D{{"$skip", skip}},
 		bson.D{{"$limit", count}},
 		bson.D{{"$lookup", bson.D{{"from", "Users"}, {"localField", "authorId"}, {"foreignField", "_id"}, {"as", "authorName"}}}},

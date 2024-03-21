@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"grpc-story-service/protobuffs/auth-service"
-	"grpc-story-service/protobuffs/story-service"
 	"net/http"
+	"story-service/protobuffs/auth-service"
+	"story-service/protobuffs/story-service"
 	"testing"
 )
 

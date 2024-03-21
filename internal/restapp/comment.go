@@ -2,9 +2,9 @@ package restapp
 
 import (
 	"encoding/json"
-	"grpc-story-service/protobuffs/story-service"
 	"log"
 	"net/http"
+	"story-service/protobuffs/story-service"
 )
 
 func (s RestApp) CommentRoute(writer http.ResponseWriter, request *http.Request) {
@@ -22,8 +22,7 @@ func (s RestApp) CommentRoute(writer http.ResponseWriter, request *http.Request)
 }
 
 func (s RestApp) DeleteComment(writer http.ResponseWriter, request *http.Request) {
-
-	userId := request.Context().Value("userId")
+	userId := request.Context().Value(UserIdContextKey{})
 	if userId == nil {
 		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -55,7 +54,7 @@ func (s RestApp) DeleteComment(writer http.ResponseWriter, request *http.Request
 }
 
 func (s RestApp) CreateComment(w http.ResponseWriter, r *http.Request) {
-	userId := r.Context().Value("userId")
+	userId := r.Context().Value(UserIdContextKey{})
 	if userId == nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return

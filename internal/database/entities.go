@@ -2,7 +2,7 @@ package database
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"grpc-story-service/internal/model"
+	"story-service/internal/model"
 )
 
 var StoryCollection = "Stories"

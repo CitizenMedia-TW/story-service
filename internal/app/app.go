@@ -3,11 +3,11 @@ package app
 import (
 	"flag"
 	"fmt"
-	"grpc-story-service/internal/restapp"
-	"grpc-story-service/protobuffs/auth-service"
 	"log"
 	"net"
 	"net/http"
+	"story-service/internal/restapp"
+	"story-service/protobuffs/auth-service"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
