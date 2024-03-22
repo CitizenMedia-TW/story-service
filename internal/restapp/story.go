@@ -25,7 +25,7 @@ func (s RestApp) StoryRoute(writer http.ResponseWriter, request *http.Request) {
 }
 
 func (s RestApp) CreateStory(writer http.ResponseWriter, request *http.Request) {
-	userId := request.Context().Value("userId")
+	userId := request.Context().Value(UserIdContextKey{})
 
 	if userId == nil {
 		http.Error(writer, "UnAuthorized", http.StatusUnauthorized)
@@ -83,7 +83,7 @@ func (s RestApp) GetOneStory(writer http.ResponseWriter, request *http.Request) 
 }
 
 func (s RestApp) DeleteStory(writer http.ResponseWriter, request *http.Request) {
-	userId := request.Context().Value("userId")
+	userId := request.Context().Value(UserIdContextKey{})
 	if userId == nil {
 		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
 		return
