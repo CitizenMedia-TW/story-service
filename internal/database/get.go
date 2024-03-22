@@ -2,36 +2,31 @@ package database
 
 import (
 	"context"
+	"database/sql"
+	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"story-service/internal/model"
-
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type StoryQuery struct {
-	StoryEntity `bson:",inline"`
-	AuthorName  string         `bson:"authorName"`
-	Comments    []CommentQuery `bson:"comments"`
+	StoryEntity
+	AuthorName string
+	Comments   []CommentQuery
 }
 
 type CommentQuery struct {
-	CommentEntity `bson:",inline"`
-	CommenterName string            `bson:"commenterName"`
-	SubComments   []SubCommentQuery `bson:"subComments"`
+	CommentEntity
+	CommenterName string
+	SubComments   []SubCommentQuery
 }
 
 type SubCommentQuery struct {
-	SubCommentEntity `bson:",inline"`
-	ReplierName      string `bson:"replierName"`
+	SubCommentEntity
+	ReplierName string
 }
 
 // GetStoryById todo: aggregate author name , commenter name
-func (db *Database) GetStoryById(ctx context.Context, id string) (model.Story, error) {
-	storyId, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return model.Story{}, err
-	}
+func (db *SQLDatabase) GetStoryById(ctx context.Context, storyId uuid.UUID) (model.Story, error) {
 	storyQuery, err := getStoryQuery(ctx, db.database, storyId)
 	if err != nil {
 		return model.Story{}, err
@@ -40,18 +35,11 @@ func (db *Database) GetStoryById(ctx context.Context, id string) (model.Story, e
 	if err != nil {
 		return model.Story{}, err
 	}
-	for i, comment := range comments {
-		subComments, err := getSubComments(ctx, db.database, comment.Id)
-		if err != nil {
-			return model.Story{}, err
-		}
-		comments[i].SubComments = subComments
-	}
 	storyQuery.Comments = comments
 	return storyQuery.ToDomain(), nil
 }
 
-func (db *Database) GetStories(ctx context.Context, skip int32, count int32) ([]model.Story, error) {
+func (db *SQLDatabase) GetStories(ctx context.Context, skip int32, count int32) ([]model.Story, error) {
 	stories, err := getStories(ctx, db.database, skip, count)
 	if err != nil {
 		return nil, err
@@ -62,56 +50,53 @@ func (db *Database) GetStories(ctx context.Context, skip int32, count int32) ([]
 		if err != nil {
 			return nil, err
 		}
-		for i, comment := range comments {
-			subComments, err := getSubComments(ctx, db.database, comment.Id)
-			if err != nil {
-				return nil, err
-			}
-			comments[i].SubComments = subComments
-		}
 		story.Comments = comments
 		results = append(results, story.ToDomain())
 	}
 	return results, nil
 }
 
-func (db *Database) GetUserStoryId(ctx context.Context, id string) ([]string, error) {
-	userId, err := primitive.ObjectIDFromHex(id)
+func (db *SQLDatabase) GetUserStoryId(ctx context.Context, userEmail string) ([]string, error) {
 	var storyIds []string
+	stmt, err := db.database.PrepareContext(ctx, `SELECT id FROM story_t WHERE user_mail = $1`)
 	if err != nil {
 		return storyIds, err
 	}
-	cursor, err := db.database.Collection(StoryCollection).Find(ctx, bson.M{"authorId": userId})
+	defer stmt.Close()
+	rows, err := stmt.QueryContext(ctx, userEmail)
 	if err != nil {
 		return storyIds, err
 	}
-	for cursor.Next(ctx) {
-		doc := bson.M{}
-		err = cursor.Decode(&doc)
+
+	for rows.Next() {
+		var storyId string
+		err = rows.Scan(&storyId)
 		if err != nil {
 			return storyIds, err
 		}
-		storyIds = append(storyIds, cursor.Current.Lookup("_id").ObjectID().Hex())
+		storyIds = append(storyIds, storyId)
 	}
 	return storyIds, err
 }
 
-func getStories(ctx context.Context, database *mongo.Database, skip int32, count int32) ([]StoryQuery, error) {
-	pipeline := bson.A{
-		bson.D{{"$sort", bson.M{"_id": -1}}},
-		bson.D{{"$skip", skip}},
-		bson.D{{"$limit", count}},
-		bson.D{{"$lookup", bson.D{{"from", "Users"}, {"localField", "authorId"}, {"foreignField", "_id"}, {"as", "authorName"}}}},
-		bson.D{{"$set", bson.D{{"authorName", bson.D{{"$first", "$authorName.username"}}}}}},
+func getStories(ctx context.Context, database *sql.DB, skip int32, count int32) ([]StoryQuery, error) {
+	rows, err := database.QueryContext(ctx, `
+		SELECT s.id, s.title, s.subtitle, s.content, s.created_at, ut.name FROM story_t s
+		LEFT JOIN user_t ut on ut.mail = s.user_mail
+		ORDER BY s.created_at DESC
+		LIMIT $1 OFFSET $2
+	`)
+	if err != nil {
+		return nil, err
 	}
-	cursor, err := database.Collection(StoryCollection).Aggregate(ctx, pipeline)
+	defer rows.Close()
 	var results []StoryQuery
 	if err != nil {
 		return results, err
 	}
-	for cursor.Next(ctx) {
+	for rows.Next() {
 		var entity StoryQuery
-		err := cursor.Decode(&entity)
+		err := rows.Scan(&entity.Id, &entity.Title, &entity.SubTitle, &entity.Content, &entity.CreatedAt, &entity.AuthorName)
 		if err != nil {
 			return results, err
 		}
@@ -120,95 +105,99 @@ func getStories(ctx context.Context, database *mongo.Database, skip int32, count
 	return results, nil
 }
 
-func getStoryQuery(ctx context.Context, database *mongo.Database, id primitive.ObjectID) (StoryQuery, error) {
-	pipeline := bson.A{
-		bson.D{{"$match", bson.D{{"_id", id}}}},
-		bson.D{
-			{"$lookup",
-				bson.D{
-					{"from", "Users"},
-					{"localField", "authorId"},
-					{"foreignField", "_id"},
-					{"as", "authorName"},
-				},
-			},
-		},
-		bson.D{{"$set", bson.D{{"authorName", bson.D{{"$first", "$authorName.username"}}}}}},
-	}
-	cursor, err := database.Collection(StoryCollection).Aggregate(ctx, pipeline)
+func getStoryQuery(ctx context.Context, database *sql.DB, storyId uuid.UUID) (StoryQuery, error) {
+	logger := ctx.Value("logger").(*zap.Logger)
+	statement, err := database.PrepareContext(ctx, `
+		SELECT s.title, s.subtitle, s.content, s.created_at, u.name  FROM story_t s 
+		JOIN user_t u ON s.user_mail = u.mail WHERE s.id = $1`,
+	)
+
 	if err != nil {
 		return StoryQuery{}, err
 	}
-	if !cursor.Next(ctx) {
-		return StoryQuery{}, ErrNotFound
+	defer statement.Close()
+	rows, err := statement.QueryContext(ctx, storyId)
+	if err != nil {
+		return StoryQuery{}, err
 	}
-	println(cursor.Current.String())
+	rows.Close()
 	entity := StoryQuery{}
-	err = cursor.Decode(&entity)
-	println(entity.AuthorName)
+	if !rows.Next() {
+		return entity, ErrNotFound
+	}
+
+	err = rows.Scan(&entity.Title, &entity.SubTitle, &entity.Content, &entity.CreatedAt, &entity.AuthorName)
+	if err != nil {
+		logger.Log(zap.ErrorLevel, "Error scanning row", zap.Error(err))
+		return StoryQuery{}, err
+	}
 	return entity, err
 }
 
-func getStoryComments(ctx context.Context, database *mongo.Database, id primitive.ObjectID) ([]CommentQuery, error) {
-	pipeline := bson.A{
-		bson.D{{"$match", bson.D{{"storyId", id}}}},
-		bson.D{
-			{"$lookup",
-				bson.D{
-					{"from", "Users"},
-					{"localField", "commenterId"},
-					{"foreignField", "_id"},
-					{"as", "commenterName"},
-				},
-			},
-		},
-		bson.D{{"$set", bson.D{{"commenterName", bson.D{{"$first", "$commenterName.username"}}}}}},
-	}
-	cursor, err := database.Collection(CommentCollection).Aggregate(ctx, pipeline)
-	var results []CommentQuery
+func getStoryComments(ctx context.Context, database *sql.DB, storyId uuid.UUID) ([]CommentQuery, error) {
+	logger := ctx.Value("logger").(*zap.Logger)
+	statement, err := database.PrepareContext(ctx, `
+		SELECT c.id,c.content,cu.name,sc.id,sc.content,scu.name
+FROM
+    story_t s
+    LEFT JOIN comment_t c ON s.id = c.story_id
+    LEFT JOIN user_t cu ON c.user_mail = cu.mail
+    LEFT JOIN subcomment_t sc ON c.id = sc.comment_id
+    LEFT JOIN user_t scu ON sc.user_mail = scu.mail
+WHERE
+    s.id = $1
+`)
 	if err != nil {
-		return results, err
+		logger.Log(zap.ErrorLevel, "Error preparing statement", zap.Error(err))
+		return []CommentQuery{}, nil
 	}
-	for cursor.Next(ctx) {
-		var entity CommentQuery
-		err := cursor.Decode(&entity)
-		if err != nil {
-			return results, err
-		}
-		results = append(results, entity)
+	defer statement.Close()
+	rows, err := statement.QueryContext(ctx, storyId)
+	if err != nil {
+		logger.Log(zap.ErrorLevel, "Error querying database", zap.Error(err))
+		return []CommentQuery{}, nil
 	}
-	return results, nil
-}
+	defer rows.Close()
 
-func getSubComments(ctx context.Context, database *mongo.Database, id primitive.ObjectID) ([]SubCommentQuery, error) {
-	pipeline := bson.A{
-		bson.D{{"$match", bson.D{{"parentId", id}}}},
-		bson.D{
-			{"$lookup",
-				bson.D{
-					{"from", "Users"},
-					{"localField", "replierId"},
-					{"foreignField", "_id"},
-					{"as", "replierName"},
-				},
-			},
-		},
-		bson.D{{"$set", bson.D{{"replierName", bson.D{{"$first", "$replierName.username"}}}}}},
-	}
-	cursor, err := database.Collection(SubCommentCollection).Aggregate(ctx, pipeline)
-	var results []SubCommentQuery
-	if err != nil {
-		return results, err
-	}
-	for cursor.Next(ctx) {
-		var entity SubCommentQuery
-		err := cursor.Decode(&entity)
+	var comments map[uuid.UUID]CommentQuery
+	for rows.Next() {
+		var commentId uuid.UUID
+		var commentContent string
+		var commenterName string
+		var subCommentId *uuid.UUID
+		var subCommentContent *string
+		var subCommenterName *string
+		err = rows.Scan(&commentId, &commentContent, &commenterName, &subCommentId, &subCommentContent, &subCommenterName)
 		if err != nil {
-			return results, err
+			logger.Log(zap.ErrorLevel, "Error scanning row", zap.Error(err))
+			return []CommentQuery{}, nil
 		}
-		results = append(results, entity)
+		c, ok := comments[commentId]
+		if !ok {
+			c = CommentQuery{
+				CommentEntity: CommentEntity{
+					Id:      commentId,
+					Content: commentContent,
+				},
+				CommenterName: commenterName,
+			}
+		}
+		if subCommentId != nil {
+			c.SubComments = append(c.SubComments, SubCommentQuery{
+				SubCommentEntity: SubCommentEntity{
+					Id:      *subCommentId,
+					Content: *subCommentContent,
+				},
+				ReplierName: *subCommenterName,
+			})
+		}
+		comments[commentId] = c
 	}
-	return results, nil
+	var result []CommentQuery = make([]CommentQuery, len(comments))
+	for _, comment := range comments {
+		result = append(result, comment)
+	}
+	return result, nil
 }
 
 func (q StoryQuery) ToDomain() model.Story {
@@ -221,13 +210,13 @@ func (q StoryQuery) ToDomain() model.Story {
 		}
 	}
 	return model.Story{
-		Id:         q.Id.Hex(),
-		AuthorId:   q.AuthorId.Hex(),
+		Id:         q.Id.String(),
+		AuthorId:   q.AuthorId.String(),
 		AuthorName: q.AuthorName,
 		Content:    q.Content,
 		Title:      q.Title,
 		SubTitle:   q.SubTitle,
-		CreatedAt:  q.CreatedAt.Time(),
+		CreatedAt:  q.CreatedAt,
 		Tags:       q.Tags,
 		Comments:   comments,
 	}

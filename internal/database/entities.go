@@ -1,68 +1,71 @@
 package database
 
 import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/google/uuid"
 	"story-service/internal/model"
+	"time"
 )
 
-var StoryCollection = "Stories"
+var StoryTable = "story_t"
+var CommentTable = "comment_t"
+var SubCommentTable = "subcomment_t"
 
 type StoryEntity struct {
-	Id        primitive.ObjectID `bson:"_id,omitempty"`
-	AuthorId  primitive.ObjectID `bson:"authorId,omitempty"`
-	Content   string             `bson:"content"`
-	Title     string             `bson:"title"`
-	SubTitle  string             `bson:"subTitle"`
-	CreatedAt primitive.DateTime `bson:"createdAt"`
-	Tags      []string           `bson:"tags"`
+	Id          uuid.UUID
+	AuthorEmail string
+	Content     string    `bson:"content"`
+	Title       string    `bson:"title"`
+	SubTitle    string    `bson:"subTitle"`
+	CreatedAt   time.Time `bson:"createdAt"`
+	Tags        []string  `bson:"tags"`
 }
 
 var CommentCollection = "StoryComments"
 
 type CommentEntity struct {
-	Id          primitive.ObjectID `bson:"_id,omitempty"`
-	StoryId     primitive.ObjectID `bson:"storyId"`
-	Content     string             `bson:"content"`
-	CreatedAt   primitive.DateTime `bson:"createdAt"`
-	CommenterId primitive.ObjectID `bson:"commenterId"`
+	Id          uuid.UUID
+	StoryId     uuid.UUID
+	Content     string `bson:"content"`
+	CreatedAt   time.Time
+	CommenterId uuid.UUID
 }
 
 var SubCommentCollection = "StorySubComments"
 
 type SubCommentEntity struct {
-	Id        primitive.ObjectID `bson:"_id,omitempty"`
-	ParentId  primitive.ObjectID `bson:"parentId"`
-	Content   string             `bson:"content"`
-	CreatedAt primitive.DateTime `bson:"createdAt"`
-	ReplierId primitive.ObjectID `bson:"replierId"`
+	Id        uuid.UUID
+	ParentId  uuid.UUID
+	Content   string `bson:"content"`
+	CreatedAt time.Time
+	ReplierId uuid.UUID
 }
 
 func (e CommentEntity) ToDomain() model.Comment {
 	return model.Comment{
-		Id:          e.Id.Hex(),
+		Id:          e.Id.String(),
 		Content:     e.Content,
-		CreatedAt:   e.CreatedAt.Time(),
-		CommenterId: e.CommenterId.Hex(),
+		CreatedAt:   e.CreatedAt,
+		CommenterId: e.CommenterId.String(),
 	}
 }
 
 func (e SubCommentEntity) ToDomain() model.SubComment {
 	return model.SubComment{
-		Id:          e.Id.Hex(),
+		Id:          e.Id.String(),
 		Content:     e.Content,
-		CreatedAt:   e.CreatedAt.Time(),
-		CommenterId: e.ReplierId.Hex(),
+		CreatedAt:   e.CreatedAt,
+		CommenterId: e.ReplierId.String(),
 	}
 }
 
 func (e StoryEntity) ToDomain() model.Story {
 	return model.Story{
-		Id:        e.Id.Hex(),
-		AuthorId:  e.AuthorId.Hex(),
+		Id:        e.Id.String(),
+		AuthorId:  e.AuthorId.String(),
 		Content:   e.Content,
 		Title:     e.Title,
 		SubTitle:  e.SubTitle,
-		CreatedAt: e.CreatedAt.Time(),
+		CreatedAt: e.CreatedAt,
 		Tags:      e.Tags,
 	}
 }

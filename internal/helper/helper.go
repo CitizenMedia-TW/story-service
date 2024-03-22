@@ -6,12 +6,12 @@ import (
 )
 
 type Helper struct {
-	database   database.Database
+	database   database.SQLDatabase
 	AuthClient auth.AuthServiceClient
 }
 
 func New(authClient auth.AuthServiceClient) Helper {
-	db := database.New()
+	db := database.NewPostgresConn()
 
 	// grpcClient, err := grpc.Dial("157.230.46.45:50052", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	// if err != nil {

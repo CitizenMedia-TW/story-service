@@ -8,7 +8,7 @@ import (
 	"log"
 )
 
-func (db *Database) DeleteComment(ctx context.Context, commentId string) error {
+func (db *SQLDatabase) DeleteComment(ctx context.Context, commentId string) error {
 	oid, err := primitive.ObjectIDFromHex(commentId)
 	if err != nil {
 		return err
@@ -32,7 +32,7 @@ func (db *Database) DeleteComment(ctx context.Context, commentId string) error {
 	return nil
 }
 
-func (db *Database) DeleteSubComment(ctx context.Context, subCommentId string) error {
+func (db *SQLDatabase) DeleteSubComment(ctx context.Context, subCommentId string) error {
 	oid, err := primitive.ObjectIDFromHex(subCommentId)
 	if err != nil {
 		return err
@@ -45,12 +45,12 @@ func (db *Database) DeleteSubComment(ctx context.Context, subCommentId string) e
 	return nil
 }
 
-func (db *Database) DeleteStory(ctx context.Context, storyId string) error {
+func (db *SQLDatabase) DeleteStory(ctx context.Context, storyId string) error {
 	oid, err := primitive.ObjectIDFromHex(storyId)
 	if err != nil {
 		return err
 	}
-	result, err := db.database.Collection(StoryCollection).DeleteOne(ctx, bson.M{"_id": oid})
+	result, err := db.database.Collection(StoryTable).DeleteOne(ctx, bson.M{"_id": oid})
 	if err != nil {
 		log.Println("Error in DeleteStory")
 		return err
@@ -86,8 +86,8 @@ func (db *Database) DeleteStory(ctx context.Context, storyId string) error {
 }
 
 // DropCollection drops the collection (for testing purposes)
-func (db *Database) DropCollection() error {
-	err := db.database.Collection(StoryCollection).Drop(context.Background())
+func (db *SQLDatabase) DropCollection() error {
+	err := db.database.Collection(StoryTable).Drop(context.Background())
 	if err != nil {
 		log.Println("Error in DropCollection")
 		return err
