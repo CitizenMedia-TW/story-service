@@ -60,12 +60,12 @@ func (e SubCommentEntity) ToDomain() model.SubComment {
 
 func (e StoryEntity) ToDomain() model.Story {
 	return model.Story{
-		Id:        e.Id.String(),
-		AuthorId:  e.AuthorId.String(),
-		Content:   e.Content,
-		Title:     e.Title,
-		SubTitle:  e.SubTitle,
-		CreatedAt: e.CreatedAt,
-		Tags:      e.Tags,
+		Id:          e.Id.String(),
+		AuthorEmail: e.AuthorEmail,
+		Content:     e.Content,
+		Title:       e.Title,
+		SubTitle:    e.SubTitle,
+		CreatedAt:   e.CreatedAt,
+		Tags:        e.Tags,
 	}
 }

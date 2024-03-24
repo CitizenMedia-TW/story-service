@@ -43,11 +43,11 @@ func (h *Helper) GetOneStory(ctx context.Context, in *story.GetOneStoryRequest) 
 		Message: "Success",
 		Story: &story.StoryContent{
 			Author:    result.AuthorName,
-			AuthorId:  result.AuthorId,
+			AuthorId:  result.AuthorEmail,
 			Content:   result.Content,
 			Comments:  comments,
 			Title:     result.Title,
-			SubTitle:  result.SubTitle,
+			Subtitle:  result.SubTitle,
 			CreatedAt: timestamppb.New(result.CreatedAt),
 			Tags:      result.Tags,
 		},

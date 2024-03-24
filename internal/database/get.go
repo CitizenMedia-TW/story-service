@@ -26,12 +26,16 @@ type SubCommentQuery struct {
 }
 
 // GetStoryById todo: aggregate author name , commenter name
-func (db *SQLDatabase) GetStoryById(ctx context.Context, storyId uuid.UUID) (model.Story, error) {
-	storyQuery, err := getStoryQuery(ctx, db.database, storyId)
+func (db *SQLDatabase) GetStoryById(ctx context.Context, storyId string) (model.Story, error) {
+	storyIdUUID, err := uuid.Parse(storyId)
 	if err != nil {
 		return model.Story{}, err
 	}
-	comments, err := getStoryComments(ctx, db.database, storyId)
+	storyQuery, err := getStoryQuery(ctx, db.database, storyIdUUID)
+	if err != nil {
+		return model.Story{}, err
+	}
+	comments, err := getStoryComments(ctx, db.database, storyIdUUID)
 	if err != nil {
 		return model.Story{}, err
 	}
@@ -210,14 +214,14 @@ func (q StoryQuery) ToDomain() model.Story {
 		}
 	}
 	return model.Story{
-		Id:         q.Id.String(),
-		AuthorId:   q.AuthorId.String(),
-		AuthorName: q.AuthorName,
-		Content:    q.Content,
-		Title:      q.Title,
-		SubTitle:   q.SubTitle,
-		CreatedAt:  q.CreatedAt,
-		Tags:       q.Tags,
-		Comments:   comments,
+		Id:          q.Id.String(),
+		AuthorEmail: q.AuthorEmail,
+		AuthorName:  q.AuthorName,
+		Content:     q.Content,
+		Title:       q.Title,
+		SubTitle:    q.SubTitle,
+		CreatedAt:   q.CreatedAt,
+		Tags:        q.Tags,
+		Comments:    comments,
 	}
 }
