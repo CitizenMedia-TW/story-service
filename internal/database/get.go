@@ -89,7 +89,7 @@ func getStories(ctx context.Context, database *sql.DB, skip int32, count int32) 
 		LEFT JOIN user_t ut on ut.mail = s.user_mail
 		ORDER BY s.created_at DESC
 		LIMIT $1 OFFSET $2
-	`)
+	`, count, skip)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +139,7 @@ func getStoryQuery(ctx context.Context, database *sql.DB, storyId uuid.UUID) (St
 }
 
 func getStoryComments(ctx context.Context, database *sql.DB, storyId uuid.UUID) ([]CommentQuery, error) {
-	logger := ctx.Value("logger").(*zap.Logger)
+	// logger := ctx.Value("logger").(*zap.Logger)
 	statement, err := database.PrepareContext(ctx, `
 		SELECT c.id,c.content,cu.name,sc.id,sc.content,scu.name
 FROM
@@ -152,18 +152,18 @@ WHERE
     s.id = $1
 `)
 	if err != nil {
-		logger.Log(zap.ErrorLevel, "Error preparing statement", zap.Error(err))
+		// logger.Log(zap.ErrorLevel, "Error preparing statement", zap.Error(err))
 		return []CommentQuery{}, nil
 	}
 	defer statement.Close()
 	rows, err := statement.QueryContext(ctx, storyId)
 	if err != nil {
-		logger.Log(zap.ErrorLevel, "Error querying database", zap.Error(err))
+		// logger.Log(zap.ErrorLevel, "Error querying database", zap.Error(err))
 		return []CommentQuery{}, nil
 	}
 	defer rows.Close()
 
-	var comments map[uuid.UUID]CommentQuery
+	comments := make(map[uuid.UUID]CommentQuery)
 	for rows.Next() {
 		var commentId uuid.UUID
 		var commentContent string
@@ -173,7 +173,7 @@ WHERE
 		var subCommenterName *string
 		err = rows.Scan(&commentId, &commentContent, &commenterName, &subCommentId, &subCommentContent, &subCommenterName)
 		if err != nil {
-			logger.Log(zap.ErrorLevel, "Error scanning row", zap.Error(err))
+			// logger.Log(zap.ErrorLevel, "Error scanning row", zap.Error(err))
 			return []CommentQuery{}, nil
 		}
 		c, ok := comments[commentId]
