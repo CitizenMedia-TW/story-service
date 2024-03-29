@@ -49,7 +49,7 @@ func (s RestApp) CreateSubComment(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s RestApp) DeleteSubComment(writer http.ResponseWriter, request *http.Request) {
-	userId := request.Context().Value("userId")
+	userId := request.Context().Value(contextkeys.UserIdContextKey{})
 	if userId == nil {
 		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
 		return
