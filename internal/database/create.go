@@ -46,12 +46,12 @@ func (db *SQLDatabase) NewComment(ctx context.Context, commentedStoryId string, 
 	return commentId.String(), nil
 }
 
-func (db *SQLDatabase) NewSubComment(ctx context.Context, repliedCommentId string, replierId string, content string) (string, error) {
+func (db *SQLDatabase) NewSubComment(ctx context.Context, repliedCommentId string, storyId string, replierId string, content string) (string, error) {
 	subCommentId := uuid.New()
 
 	_, err := db.database.ExecContext(ctx, `
-		INSERT INTO subcomment_t (id, comment_id, content, created_at, user_mail) VALUES ($1, $2, $3, $4, $5)`,
-		subCommentId, repliedCommentId, content, time.Now(), replierId,
+		INSERT INTO subcomment_t (id, comment_id, story_id, content, created_at, user_mail) VALUES ($1, $2, $3, $4, $5, $6)`,
+		subCommentId, repliedCommentId, storyId, content, time.Now(), replierId,
 	)
 
 	if err != nil {

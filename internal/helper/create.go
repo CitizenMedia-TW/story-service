@@ -31,7 +31,7 @@ func (h *Helper) CreateStory(ctx context.Context, in *story.CreateStoryRequest) 
 }
 
 func (h *Helper) CreateSubComment(ctx context.Context, in *story.CreateSubCommentRequest) (*story.CreateSubCommentResponse, error) {
-	id, err := h.database.NewSubComment(ctx, in.RepliedCommentId, in.CommenterId, in.Content)
+	id, err := h.database.NewSubComment(ctx, in.RepliedCommentId, in.StoryId, in.CommenterId, in.Content)
 	if err != nil {
 		return nil, err
 	}

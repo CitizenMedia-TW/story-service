@@ -16,6 +16,7 @@ func (db *SQLDatabase) DeleteSubComment(ctx context.Context, subCommentId string
 }
 
 func (db *SQLDatabase) DeleteStory(ctx context.Context, storyId string) error {
+
 	result, err := db.database.ExecContext(ctx, `DELETE FROM story_t WHERE id = $1`, storyId)
 	if err != nil {
 		log.Println("Error in DeleteStory")
