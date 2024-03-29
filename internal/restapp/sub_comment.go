@@ -3,6 +3,7 @@ package restapp
 import (
 	"encoding/json"
 	"net/http"
+	"story-service/internal/restapp/contextkeys"
 	"story-service/protobuffs/story-service"
 )
 
@@ -21,7 +22,7 @@ func (s RestApp) SubCommentRoute(writer http.ResponseWriter, request *http.Reque
 }
 
 func (s RestApp) CreateSubComment(w http.ResponseWriter, r *http.Request) {
-	userId := r.Context().Value("userId")
+	userId := r.Context().Value(contextkeys.UserIdContextKey{})
 	if userId == nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
