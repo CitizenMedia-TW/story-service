@@ -2,17 +2,19 @@ package helper
 
 import (
 	"context"
-	"log"
+	"go.uber.org/zap"
+	"story-service/internal/restapp/contextkeys"
 	"story-service/protobuffs/story-service"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (h *Helper) GetOneStory(ctx context.Context, in *story.GetOneStoryRequest) (*story.GetOneStoryResponse, error) {
+	logger := ctx.Value(contextkeys.LoggerContextKey{}).(*zap.Logger)
 	result, err := h.database.GetStoryById(ctx, in.StoryId)
 
 	if err != nil {
-		log.Println(err)
+		logger.Error("failed to get story by id ", zap.String("id", in.StoryId), zap.Error(err))
 		return nil, err
 	}
 	var comments = make([]*story.Comment, len(result.Comments))

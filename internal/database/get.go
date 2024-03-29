@@ -6,6 +6,8 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"story-service/internal/model"
+	"story-service/internal/restapp/contextkeys"
+	"time"
 )
 
 type StoryQuery struct {
@@ -110,27 +112,17 @@ func getStories(ctx context.Context, database *sql.DB, skip int32, count int32) 
 }
 
 func getStoryQuery(ctx context.Context, database *sql.DB, storyId uuid.UUID) (StoryQuery, error) {
-	logger := ctx.Value("logger").(*zap.Logger)
-	statement, err := database.PrepareContext(ctx, `
+	logger := ctx.Value(contextkeys.LoggerContextKey{}).(*zap.Logger)
+	row := database.QueryRowContext(ctx, `
 		SELECT s.title, s.subtitle, s.content, s.created_at, u.name  FROM story_t s 
-		JOIN user_t u ON s.user_mail = u.mail WHERE s.id = $1`,
+		LEFT JOIN user_t u ON s.user_mail = u.mail WHERE s.id = $1`,
+		storyId,
 	)
-
-	if err != nil {
-		return StoryQuery{}, err
+	if row.Err() != nil {
+		return StoryQuery{}, row.Err()
 	}
-	defer statement.Close()
-	rows, err := statement.QueryContext(ctx, storyId)
-	if err != nil {
-		return StoryQuery{}, err
-	}
-	rows.Close()
 	entity := StoryQuery{}
-	if !rows.Next() {
-		return entity, ErrNotFound
-	}
-
-	err = rows.Scan(&entity.Title, &entity.SubTitle, &entity.Content, &entity.CreatedAt, &entity.AuthorName)
+	err := row.Scan(&entity.Title, &entity.SubTitle, &entity.Content, &entity.CreatedAt, &entity.AuthorName)
 	if err != nil {
 		logger.Log(zap.ErrorLevel, "Error scanning row", zap.Error(err))
 		return StoryQuery{}, err
@@ -139,9 +131,9 @@ func getStoryQuery(ctx context.Context, database *sql.DB, storyId uuid.UUID) (St
 }
 
 func getStoryComments(ctx context.Context, database *sql.DB, storyId uuid.UUID) ([]CommentQuery, error) {
-	// logger := ctx.Value("logger").(*zap.Logger)
-	statement, err := database.PrepareContext(ctx, `
-		SELECT c.id,c.content,cu.name,sc.id,sc.content,scu.name
+	logger := ctx.Value(contextkeys.LoggerContextKey{}).(*zap.Logger)
+	rows, err := database.QueryContext(ctx, `
+		SELECT c.id,c.content,c.created_at,cu.name,cu.mail,sc.id,sc.content,sc.created_at,scu.name,scu.mail
 FROM
     story_t s
     LEFT JOIN comment_t c ON s.id = c.story_id
@@ -150,15 +142,9 @@ FROM
     LEFT JOIN user_t scu ON sc.user_mail = scu.mail
 WHERE
     s.id = $1
-`)
+`, storyId)
 	if err != nil {
-		// logger.Log(zap.ErrorLevel, "Error preparing statement", zap.Error(err))
-		return []CommentQuery{}, nil
-	}
-	defer statement.Close()
-	rows, err := statement.QueryContext(ctx, storyId)
-	if err != nil {
-		// logger.Log(zap.ErrorLevel, "Error querying database", zap.Error(err))
+		logger.Log(zap.ErrorLevel, "Error preparing statement", zap.Error(err))
 		return []CommentQuery{}, nil
 	}
 	defer rows.Close()
@@ -167,21 +153,27 @@ WHERE
 	for rows.Next() {
 		var commentId uuid.UUID
 		var commentContent string
+		var commentTime time.Time
 		var commenterName string
+		var commenterId string
 		var subCommentId *uuid.UUID
 		var subCommentContent *string
+		var subCommentTime *time.Time
+		var subCommenterId *string
 		var subCommenterName *string
-		err = rows.Scan(&commentId, &commentContent, &commenterName, &subCommentId, &subCommentContent, &subCommenterName)
+		err = rows.Scan(&commentId, &commentContent, &commentTime, &commenterName, &commenterId, &subCommentId, &subCommentContent, &subCommentTime, &subCommenterName, &subCommenterId)
 		if err != nil {
-			// logger.Log(zap.ErrorLevel, "Error scanning row", zap.Error(err))
+			logger.Log(zap.ErrorLevel, "Error scanning row", zap.Error(err))
 			return []CommentQuery{}, nil
 		}
 		c, ok := comments[commentId]
 		if !ok {
 			c = CommentQuery{
 				CommentEntity: CommentEntity{
-					Id:      commentId,
-					Content: commentContent,
+					Id:          commentId,
+					Content:     commentContent,
+					CreatedAt:   commentTime,
+					CommenterId: commenterId,
 				},
 				CommenterName: commenterName,
 			}
@@ -189,8 +181,10 @@ WHERE
 		if subCommentId != nil {
 			c.SubComments = append(c.SubComments, SubCommentQuery{
 				SubCommentEntity: SubCommentEntity{
-					Id:      *subCommentId,
-					Content: *subCommentContent,
+					Id:        *subCommentId,
+					Content:   *subCommentContent,
+					CreatedAt: *subCommentTime,
+					ReplierId: *subCommenterId,
 				},
 				ReplierName: *subCommenterName,
 			})
@@ -198,8 +192,10 @@ WHERE
 		comments[commentId] = c
 	}
 	var result []CommentQuery = make([]CommentQuery, len(comments))
+	i := 0
 	for _, comment := range comments {
-		result = append(result, comment)
+		result[i] = comment
+		i++
 	}
 	return result, nil
 }

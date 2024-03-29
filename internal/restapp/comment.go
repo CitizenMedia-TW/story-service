@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"story-service/internal/restapp/contextkeys"
 	"story-service/protobuffs/story-service"
 )
 
@@ -22,7 +23,7 @@ func (s RestApp) CommentRoute(writer http.ResponseWriter, request *http.Request)
 }
 
 func (s RestApp) DeleteComment(writer http.ResponseWriter, request *http.Request) {
-	userId := request.Context().Value(UserIdContextKey{})
+	userId := request.Context().Value(contextkeys.UserIdContextKey{})
 	if userId == nil {
 		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -54,7 +55,7 @@ func (s RestApp) DeleteComment(writer http.ResponseWriter, request *http.Request
 }
 
 func (s RestApp) CreateComment(w http.ResponseWriter, r *http.Request) {
-	userId := r.Context().Value(UserIdContextKey{})
+	userId := r.Context().Value(contextkeys.UserIdContextKey{})
 	if userId == nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return

@@ -71,6 +71,7 @@ func getStory(t *testing.T, token string, storyId string) *story.GetOneStoryResp
 
 func TestCreateAndGetStory(t *testing.T) {
 	token := GetAuthToken(t)
+	println(token)
 	storyId := createStory(t, token)
 
 	assert.NotEmpty(t, storyId)

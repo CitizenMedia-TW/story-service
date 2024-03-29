@@ -27,7 +27,7 @@ type CommentEntity struct {
 	StoryId     uuid.UUID
 	Content     string `bson:"content"`
 	CreatedAt   time.Time
-	CommenterId uuid.UUID
+	CommenterId string
 }
 
 var SubCommentCollection = "StorySubComments"
@@ -37,7 +37,7 @@ type SubCommentEntity struct {
 	ParentId  uuid.UUID
 	Content   string `bson:"content"`
 	CreatedAt time.Time
-	ReplierId uuid.UUID
+	ReplierId string
 }
 
 func (e CommentEntity) ToDomain() model.Comment {
@@ -45,7 +45,7 @@ func (e CommentEntity) ToDomain() model.Comment {
 		Id:          e.Id.String(),
 		Content:     e.Content,
 		CreatedAt:   e.CreatedAt,
-		CommenterId: e.CommenterId.String(),
+		CommenterId: e.CommenterId,
 	}
 }
 
@@ -54,7 +54,7 @@ func (e SubCommentEntity) ToDomain() model.SubComment {
 		Id:          e.Id.String(),
 		Content:     e.Content,
 		CreatedAt:   e.CreatedAt,
-		CommenterId: e.ReplierId.String(),
+		CommenterId: e.ReplierId,
 	}
 }
 

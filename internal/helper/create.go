@@ -15,7 +15,7 @@ func (h *Helper) CreateComment(ctx context.Context, in *story.CreateCommentReque
 }
 
 func (h *Helper) CreateStory(ctx context.Context, in *story.CreateStoryRequest) (*story.CreateStoryResponse, error) {
-	id, err := h.database.NewStory(ctx, database.NewStory{
+	id, err := h.database.InsertStory(ctx, database.NewStory{
 		UserEmail: in.AuthorId,
 		Content:   in.Content,
 		Title:     in.Title,
