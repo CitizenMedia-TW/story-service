@@ -41,7 +41,12 @@ func (db *SQLDatabase) GetStoryById(ctx context.Context, storyId string) (model.
 	if err != nil {
 		return model.Story{}, err
 	}
+	tags, err := getStoryTags(ctx, db.database, storyIdUUID)
+	if err != nil {
+		return model.Story{}, err
+	}
 	storyQuery.Comments = comments
+	storyQuery.Tags = tags
 	return storyQuery.ToDomain(), nil
 }
 
@@ -85,6 +90,25 @@ func (db *SQLDatabase) GetUserStoryId(ctx context.Context, userEmail string) ([]
 	return storyIds, err
 }
 
+func getStoryTags(ctx context.Context, database *sql.DB, storyId uuid.UUID) ([]string, error) {
+	rows, err := database.QueryContext(ctx, `
+		SELECT tag FROM story_tag_t WHERE story_id = $1
+	`, storyId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var tags []string
+	for rows.Next() {
+		var tag string
+		err := rows.Scan(&tag)
+		if err != nil {
+			return tags, err
+		}
+		tags = append(tags, tag)
+	}
+	return tags, nil
+}
 func getStories(ctx context.Context, database *sql.DB, skip int32, count int32) ([]StoryQuery, error) {
 	rows, err := database.QueryContext(ctx, `
 		SELECT s.id, s.title, s.subtitle, s.content, s.created_at, ut.name FROM story_t s
@@ -220,4 +244,23 @@ func (q StoryQuery) ToDomain() model.Story {
 		Tags:        q.Tags,
 		Comments:    comments,
 	}
+}
+
+func (db *SQLDatabase) GetStoryIdsByTag(ctx context.Context, tag string) ([]string, error) {
+	var storyIds []string
+	rows, err := db.database.QueryContext(ctx, `SELECT story_id FROM story_tag_t WHERE tag = $1`, tag)
+	if err != nil {
+		return storyIds, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var storyId string
+		err = rows.Scan(&storyId)
+		if err != nil {
+			return storyIds, err
+		}
+		storyIds = append(storyIds, storyId)
+	}
+	return storyIds, nil
+
 }

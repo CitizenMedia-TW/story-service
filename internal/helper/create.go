@@ -3,6 +3,7 @@ package helper
 import (
 	"context"
 	"story-service/internal/database"
+	"story-service/internal/utils"
 	"story-service/protobuffs/story-service"
 )
 
@@ -15,6 +16,9 @@ func (h *Helper) CreateComment(ctx context.Context, in *story.CreateCommentReque
 }
 
 func (h *Helper) CreateStory(ctx context.Context, in *story.CreateStoryRequest) (*story.CreateStoryResponse, error) {
+	//remove duplicate tags
+	in.Tags = utils.RemoveDuplicate(in.Tags)
+
 	id, err := h.database.InsertStory(ctx, database.NewStory{
 		UserEmail: in.AuthorId,
 		Content:   in.Content,

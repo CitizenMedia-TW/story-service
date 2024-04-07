@@ -21,9 +21,22 @@ func (db *SQLDatabase) InsertStory(ctx context.Context, story NewStory) (string,
 		INSERT INTO story_t (id, user_mail, content, title, subtitle, created_at) VALUES ($1, $2, $3, $4, $5, $6)`,
 		storyId, story.UserEmail, story.Content, story.Title, story.SubTitle, time.Now(),
 	)
-
 	if err != nil {
 		log.Println("Error in push")
+		return "", err
+	}
+
+	//insert tags
+	insertTagStr := "INSERT INTO story_tag_t (story_id, tag) VALUES "
+	var vals []interface{}
+	for _, tag := range story.Tags {
+		insertTagStr += "(?, ?),"
+		vals = append(vals, storyId, tag)
+	}
+	insertTagStr = insertTagStr[:len(insertTagStr)-1] //remove last comma
+	_, err = db.database.ExecContext(ctx, insertTagStr, vals...)
+
+	if err != nil {
 		return "", err
 	}
 
