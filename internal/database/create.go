@@ -2,9 +2,11 @@ package database
 
 import (
 	"context"
-	"github.com/google/uuid"
+	"fmt"
 	"log"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type NewStory struct {
@@ -26,15 +28,13 @@ func (db *SQLDatabase) InsertStory(ctx context.Context, story NewStory) (string,
 		return "", err
 	}
 
-	//insert tags
+	// Insert tags
 	insertTagStr := "INSERT INTO story_tag_t (story_id, tag) VALUES "
-	var vals []interface{}
 	for _, tag := range story.Tags {
-		insertTagStr += "(?, ?),"
-		vals = append(vals, storyId, tag)
+		insertTagStr += fmt.Sprint("('", storyId, "', '", tag, "'),")
 	}
 	insertTagStr = insertTagStr[:len(insertTagStr)-1] //remove last comma
-	_, err = db.database.ExecContext(ctx, insertTagStr, vals...)
+	_, err = db.database.ExecContext(ctx, insertTagStr)
 
 	if err != nil {
 		return "", err
