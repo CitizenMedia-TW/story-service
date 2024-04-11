@@ -3,6 +3,7 @@ package restapp
 import (
 	"encoding/json"
 	"net/http"
+	"story-service/internal/restapp/contextkeys"
 )
 
 func (s RestApp) MyStoryRoute(writer http.ResponseWriter, request *http.Request) {
@@ -17,7 +18,7 @@ func (s RestApp) MyStoryRoute(writer http.ResponseWriter, request *http.Request)
 }
 
 func (s RestApp) GetMyStory(writer http.ResponseWriter, request *http.Request) {
-	userId := request.Context().Value(UserIdContextKey{})
+	userId := request.Context().Value(contextkeys.UserIdContextKey{})
 	if userId == nil {
 		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
 		return

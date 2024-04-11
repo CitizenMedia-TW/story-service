@@ -13,13 +13,13 @@ import (
 	"testing"
 )
 
-var testUserId = "65daeba1cee0c506514304c8"
+var testUserId = "user1@example.com"
 
 func GetAuthToken(t *testing.T) string {
 	grpcClient, err := grpc.Dial("157.230.46.45:50052", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	assert.NoError(t, err)
 	token, err := auth.NewAuthServiceClient(grpcClient).GenerateToken(context.TODO(), &auth.GenerateTokenRequest{
-		Mail: "110703065@nccu.edu.tw",
+		Mail: "user1@example.com",
 		Id:   testUserId,
 		Name: "Irrelevant",
 	})
@@ -71,6 +71,7 @@ func getStory(t *testing.T, token string, storyId string) *story.GetOneStoryResp
 
 func TestCreateAndGetStory(t *testing.T) {
 	token := GetAuthToken(t)
+	println(token)
 	storyId := createStory(t, token)
 
 	assert.NotEmpty(t, storyId)

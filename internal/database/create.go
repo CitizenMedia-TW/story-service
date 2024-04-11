@@ -2,99 +2,73 @@ package database
 
 import (
 	"context"
-	"errors"
+	"github.com/google/uuid"
 	"log"
 	"time"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type NewStory struct {
-	AuthorId string
-	Content  string
-	Title    string
-	SubTitle string
-	Tags     []string
+	UserEmail string
+	Content   string
+	Title     string
+	SubTitle  string
+	Tags      []string
 }
 
-func (db *Database) NewStory(ctx context.Context, story NewStory) (string, error) {
-	authorId, err := primitive.ObjectIDFromHex(story.AuthorId)
-	if err != nil {
-		return "", errors.Join(err, errors.New("invalid author id"+story.AuthorId))
-	}
-
-	//probably should check if author exist, but since it's nosql database, and it does not affect the query outcome, we'll skip it for now.
-	storyEntity := StoryEntity{
-		Id:        primitive.NewObjectID(),
-		AuthorId:  authorId,
-		Content:   story.Content,
-		Title:     story.Title,
-		SubTitle:  story.SubTitle,
-		CreatedAt: primitive.NewDateTimeFromTime(time.Now()),
-		Tags:      story.Tags,
-	}
-
-	_, err = db.database.Collection(StoryCollection).InsertOne(ctx, storyEntity)
-
+func (db *SQLDatabase) InsertStory(ctx context.Context, story NewStory) (string, error) {
+	storyId := uuid.New()
+	_, err := db.database.ExecContext(ctx, `
+		INSERT INTO story_t (id, user_mail, content, title, subtitle, created_at) VALUES ($1, $2, $3, $4, $5, $6)`,
+		storyId, story.UserEmail, story.Content, story.Title, story.SubTitle, time.Now(),
+	)
 	if err != nil {
 		log.Println("Error in push")
 		return "", err
 	}
+
+	//insert tags
+	insertTagStr := "INSERT INTO story_tag_t (story_id, tag) VALUES "
+	var vals []interface{}
+	for _, tag := range story.Tags {
+		insertTagStr += "(?, ?),"
+		vals = append(vals, storyId, tag)
+	}
+	insertTagStr = insertTagStr[:len(insertTagStr)-1] //remove last comma
+	_, err = db.database.ExecContext(ctx, insertTagStr, vals...)
+
+	if err != nil {
+		return "", err
+	}
+
 	//todo: use a better logging/tracing system
-	return storyEntity.Id.Hex(), nil
+	return storyId.String(), nil
 }
 
-func (db *Database) NewComment(ctx context.Context, commentedStoryId string, commenterId string, content string) (string, error) {
-	storyOid, err := primitive.ObjectIDFromHex(commentedStoryId)
-	if err != nil {
-		return "", errors.Join(err, errors.New("invalid story id"+commentedStoryId))
-	}
-	commenterOid, err := primitive.ObjectIDFromHex(commenterId)
-	if err != nil {
-		return "", errors.Join(err, errors.New("invalid commenter id"+commenterId))
-	}
-
+func (db *SQLDatabase) NewComment(ctx context.Context, commentedStoryId string, commenterMail string, content string) (string, error) {
 	//probably should check if story and commenter exist, but since it's nosql database, and it does not affect the query outcome, we'll skip it for now.
-	commentEntity := CommentEntity{
-		Id:          primitive.NewObjectID(),
-		StoryId:     storyOid,
-		Content:     content,
-		CreatedAt:   primitive.NewDateTimeFromTime(time.Now()),
-		CommenterId: commenterOid,
-	}
-
-	_, err = db.database.Collection(CommentCollection).InsertOne(ctx, commentEntity)
+	commentId := uuid.New()
+	_, err := db.database.ExecContext(ctx, `
+	INSERT INTO comment_t (id, story_id, content, created_at, user_mail) VALUES ($1, $2, $3, $4, $5)`,
+		commentId, commentedStoryId, content, time.Now(), commenterMail,
+	)
 
 	if err != nil {
 		return "", err
 	}
 
-	return commentEntity.Id.Hex(), nil
+	return commentId.String(), nil
 }
 
-func (db *Database) NewSubComment(ctx context.Context, repliedCommentId string, replierId string, content string) (string, error) {
-	repliedCommentOid, err := primitive.ObjectIDFromHex(repliedCommentId)
-	if err != nil {
-		return "", errors.Join(err, errors.New("invalid story id"+repliedCommentId))
-	}
-	replierOid, err := primitive.ObjectIDFromHex(replierId)
-	if err != nil {
-		return "", errors.Join(err, errors.New("invalid commenter id"+repliedCommentId))
-	}
+func (db *SQLDatabase) NewSubComment(ctx context.Context, repliedCommentId string, storyId string, replierId string, content string) (string, error) {
+	subCommentId := uuid.New()
 
-	reply := SubCommentEntity{
-		Id:        primitive.NewObjectID(),
-		ParentId:  repliedCommentOid,
-		Content:   content,
-		CreatedAt: primitive.NewDateTimeFromTime(time.Now()),
-		ReplierId: replierOid,
-	}
-
-	_, err = db.database.Collection(SubCommentCollection).InsertOne(ctx, reply)
+	_, err := db.database.ExecContext(ctx, `
+		INSERT INTO subcomment_t (id, comment_id, story_id, content, created_at, user_mail) VALUES ($1, $2, $3, $4, $5, $6)`,
+		subCommentId, repliedCommentId, storyId, content, time.Now(), replierId,
+	)
 
 	if err != nil {
 		return "", err
 	}
-
-	return reply.Id.Hex(), nil
+	return subCommentId.String(), nil
 }

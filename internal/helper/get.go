@@ -2,17 +2,19 @@ package helper
 
 import (
 	"context"
-	"log"
+	"go.uber.org/zap"
+	"story-service/internal/restapp/contextkeys"
 	"story-service/protobuffs/story-service"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (h *Helper) GetOneStory(ctx context.Context, in *story.GetOneStoryRequest) (*story.GetOneStoryResponse, error) {
+	logger := ctx.Value(contextkeys.LoggerContextKey{}).(*zap.Logger)
 	result, err := h.database.GetStoryById(ctx, in.StoryId)
 
 	if err != nil {
-		log.Println(err)
+		logger.Error("failed to get story by id ", zap.String("id", in.StoryId), zap.Error(err))
 		return nil, err
 	}
 	var comments = make([]*story.Comment, len(result.Comments))
@@ -43,11 +45,11 @@ func (h *Helper) GetOneStory(ctx context.Context, in *story.GetOneStoryRequest) 
 		Message: "Success",
 		Story: &story.StoryContent{
 			Author:    result.AuthorName,
-			AuthorId:  result.AuthorId,
+			AuthorId:  result.AuthorEmail,
 			Content:   result.Content,
 			Comments:  comments,
 			Title:     result.Title,
-			SubTitle:  result.SubTitle,
+			Subtitle:  result.SubTitle,
 			CreatedAt: timestamppb.New(result.CreatedAt),
 			Tags:      result.Tags,
 		},
@@ -90,4 +92,8 @@ func (h *Helper) GetLatestStories(ctx context.Context) (*story.GetLatestStoriesR
 	}
 
 	return &story.GetLatestStoriesResponse{Message: "Success", StoryIdList: ids}, nil
+}
+
+func (h *Helper) GetStoryByTag(ctx context.Context, tag string) ([]string, error) {
+	return h.database.GetStoryIdsByTag(ctx, tag)
 }

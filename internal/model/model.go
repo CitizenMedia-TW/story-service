@@ -5,15 +5,15 @@ import (
 )
 
 type Story struct {
-	Id         string    `json:"id,omitempty"`
-	AuthorName string    `json:"authorName"`
-	AuthorId   string    `json:"authorId,omitempty"`
-	Content    string    `json:"content"`
-	Title      string    `json:"title"`
-	SubTitle   string    `json:"subTitle"`
-	CreatedAt  time.Time `json:"createdAt"`
-	Tags       []string  `json:"tags"`
-	Comments   []Comment `json:"comments"`
+	Id          string    `json:"id,omitempty"`
+	AuthorName  string    `json:"authorName"`
+	AuthorEmail string    `json:"authorEmail,omitempty"`
+	Content     string    `json:"content"`
+	Title       string    `json:"title"`
+	SubTitle    string    `json:"subTitle"`
+	CreatedAt   time.Time `json:"createdAt"`
+	Tags        []string  `json:"tags"`
+	Comments    []Comment `json:"comments"`
 }
 
 type Comment struct {

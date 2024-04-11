@@ -2,36 +2,40 @@ package restapp
 
 import (
 	"context"
-	"log"
+	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"net/http"
 	"story-service/internal/helper"
+	"story-service/internal/restapp/contextkeys"
 	"story-service/protobuffs/auth-service"
 )
 
 type RestApp struct {
 	helper helper.Helper
+	logger *zap.Logger
 }
-
-type UserIdContextKey struct{}
 
 func New(authClient auth.AuthServiceClient) RestApp {
 	h := helper.New(authClient)
+	logger, _ := zap.NewDevelopment()
 
 	return RestApp{
 		helper: h,
+		logger: logger,
 	}
 }
 
 func (s RestApp) middlewares(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Print("Executing middleware")
+		logger := s.logger.With(zap.String("requestId", uuid.New().String()))
+		logger.Log(zap.DebugLevel, "Executing middleware")
+		r = r.WithContext(context.WithValue(r.Context(), contextkeys.LoggerContextKey{}, logger))
 
 		res, err := s.helper.AuthClient.VerifyToken(context.Background(), &auth.VerifyTokenRequest{Token: r.Header.Get("Authorization")})
-
+		logger.Log(zap.DebugLevel, "verify token", zap.String("status", res.Message))
 		if err == nil && res.Message != "Failed" {
-			println(res.Message)
-			r = r.WithContext(context.WithValue(r.Context(), UserIdContextKey{}, res.JwtContent.Id))
-			r = r.WithContext(context.WithValue(r.Context(), "mail", res.JwtContent.Mail))
+			logger.Log(zap.DebugLevel, "verify Success", zap.String("userId", res.JwtContent.Mail))
+			r = r.WithContext(context.WithValue(r.Context(), contextkeys.UserIdContextKey{}, res.JwtContent.Mail))
 		}
 
 		//Allow CORS here By * or specific origin
@@ -45,7 +49,6 @@ func (s RestApp) middlewares(next http.Handler) http.Handler {
 		}
 
 		next.ServeHTTP(w, r)
-		// log.Print("Executing middlewareTwo again")
 	})
 }
 

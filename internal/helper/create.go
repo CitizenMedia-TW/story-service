@@ -3,6 +3,7 @@ package helper
 import (
 	"context"
 	"story-service/internal/database"
+	"story-service/internal/utils"
 	"story-service/protobuffs/story-service"
 )
 
@@ -15,12 +16,15 @@ func (h *Helper) CreateComment(ctx context.Context, in *story.CreateCommentReque
 }
 
 func (h *Helper) CreateStory(ctx context.Context, in *story.CreateStoryRequest) (*story.CreateStoryResponse, error) {
-	id, err := h.database.NewStory(ctx, database.NewStory{
-		AuthorId: in.AuthorId,
-		Content:  in.Content,
-		Title:    in.Title,
-		SubTitle: in.SubTitle,
-		Tags:     in.Tags,
+	//remove duplicate tags
+	in.Tags = utils.RemoveDuplicate(in.Tags)
+
+	id, err := h.database.InsertStory(ctx, database.NewStory{
+		UserEmail: in.AuthorId,
+		Content:   in.Content,
+		Title:     in.Title,
+		SubTitle:  in.Subtitle,
+		Tags:      in.Tags,
 	})
 
 	if err != nil {
@@ -31,7 +35,7 @@ func (h *Helper) CreateStory(ctx context.Context, in *story.CreateStoryRequest) 
 }
 
 func (h *Helper) CreateSubComment(ctx context.Context, in *story.CreateSubCommentRequest) (*story.CreateSubCommentResponse, error) {
-	id, err := h.database.NewSubComment(ctx, in.RepliedCommentId, in.CommenterId, in.Content)
+	id, err := h.database.NewSubComment(ctx, in.RepliedCommentId, in.StoryId, in.CommenterId, in.Content)
 	if err != nil {
 		return nil, err
 	}
