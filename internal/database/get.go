@@ -111,7 +111,7 @@ func getStoryTags(ctx context.Context, database *sql.DB, storyId uuid.UUID) ([]s
 }
 func getStories(ctx context.Context, database *sql.DB, skip int32, count int32) ([]StoryQuery, error) {
 	rows, err := database.QueryContext(ctx, `
-		SELECT s.id, s.title, s.subtitle, s.content, s.created_at, ut.name FROM story_t s
+		SELECT s.id, s.title, s.subtitle, s.content, s.created_at, ut.name, s.user_mail FROM story_t s
 		LEFT JOIN user_t ut on ut.mail = s.user_mail
 		ORDER BY s.created_at DESC
 		LIMIT $1 OFFSET $2
@@ -126,7 +126,7 @@ func getStories(ctx context.Context, database *sql.DB, skip int32, count int32) 
 	}
 	for rows.Next() {
 		var entity StoryQuery
-		err := rows.Scan(&entity.Id, &entity.Title, &entity.SubTitle, &entity.Content, &entity.CreatedAt, &entity.AuthorName)
+		err := rows.Scan(&entity.Id, &entity.Title, &entity.SubTitle, &entity.Content, &entity.CreatedAt, &entity.AuthorName, &entity.AuthorEmail)
 		if err != nil {
 			return results, err
 		}
@@ -138,7 +138,7 @@ func getStories(ctx context.Context, database *sql.DB, skip int32, count int32) 
 func getStoryQuery(ctx context.Context, database *sql.DB, storyId uuid.UUID) (StoryQuery, error) {
 	logger := ctx.Value(contextkeys.LoggerContextKey{}).(*zap.Logger)
 	row := database.QueryRowContext(ctx, `
-		SELECT s.title, s.subtitle, s.content, s.created_at, u.name  FROM story_t s 
+		SELECT s.title, s.subtitle, s.content, s.created_at, u.name, u.mail  FROM story_t s 
 		LEFT JOIN user_t u ON s.user_mail = u.mail WHERE s.id = $1`,
 		storyId,
 	)
@@ -146,7 +146,7 @@ func getStoryQuery(ctx context.Context, database *sql.DB, storyId uuid.UUID) (St
 		return StoryQuery{}, row.Err()
 	}
 	entity := StoryQuery{}
-	err := row.Scan(&entity.Title, &entity.SubTitle, &entity.Content, &entity.CreatedAt, &entity.AuthorName)
+	err := row.Scan(&entity.Title, &entity.SubTitle, &entity.Content, &entity.CreatedAt, &entity.AuthorName, &entity.AuthorEmail)
 	if err != nil {
 		logger.Log(zap.ErrorLevel, "Error scanning row", zap.Error(err))
 		return StoryQuery{}, err
