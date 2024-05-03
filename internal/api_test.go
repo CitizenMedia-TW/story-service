@@ -20,7 +20,6 @@ func GetAuthToken(t *testing.T) string {
 	assert.NoError(t, err)
 	token, err := auth.NewAuthServiceClient(grpcClient).GenerateToken(context.TODO(), &auth.GenerateTokenRequest{
 		Mail: "user1@example.com",
-		Id:   testUserId,
 		Name: "Irrelevant",
 	})
 	assert.NoError(t, err)

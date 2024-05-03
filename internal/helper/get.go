@@ -94,6 +94,6 @@ func (h *Helper) GetLatestStories(ctx context.Context) (*story.GetLatestStoriesR
 	return &story.GetLatestStoriesResponse{Message: "Success", StoryIdList: ids}, nil
 }
 
-func (h *Helper) GetStoryByTag(ctx context.Context, tag string) ([]string, error) {
-	return h.database.GetStoryIdsByTag(ctx, tag)
+func (h *Helper) GetStoryByTag(ctx context.Context, tag string, limit int64, offset int64) ([]string, error) {
+	return h.database.GetStoryIdsByTag(ctx, tag, limit, offset)
 }

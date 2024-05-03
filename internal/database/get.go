@@ -246,9 +246,9 @@ func (q StoryQuery) ToDomain() model.Story {
 	}
 }
 
-func (db *SQLDatabase) GetStoryIdsByTag(ctx context.Context, tag string) ([]string, error) {
+func (db *SQLDatabase) GetStoryIdsByTag(ctx context.Context, tag string, limit int64, offset int64) ([]string, error) {
 	var storyIds []string
-	rows, err := db.database.QueryContext(ctx, `SELECT story_id FROM story_tag_t WHERE tag = $1`, tag)
+	rows, err := db.database.QueryContext(ctx, `SELECT story_id FROM story_tag_t WHERE tag = $1 LIMIT $2 OFFSET $3`, tag, limit, offset)
 	if err != nil {
 		return storyIds, err
 	}
