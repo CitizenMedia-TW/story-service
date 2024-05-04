@@ -10,6 +10,8 @@ import (
 func (s RestApp) SearchRoute(writer http.ResponseWriter, request *http.Request) {
 	switch request.Method {
 	case "GET":
+		s.Search(writer, request)
+		return
 
 	default:
 		http.Error(writer, "Method not allowed", http.StatusMethodNotAllowed)
