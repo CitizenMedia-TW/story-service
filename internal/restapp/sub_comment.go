@@ -10,10 +10,10 @@ import (
 func (s RestApp) SubCommentRoute(writer http.ResponseWriter, request *http.Request) {
 	switch request.Method {
 	case "POST":
-		s.CreateSubComment(writer, request)
+		s.jwtProtect(s.CreateSubComment, writer, request)
 		return
 	case "DELETE":
-		s.DeleteSubComment(writer, request)
+		s.jwtProtect(s.DeleteSubComment, writer, request)
 		return
 	default:
 		http.Error(writer, "Method not allowed", http.StatusMethodNotAllowed)

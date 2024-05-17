@@ -11,10 +11,10 @@ import (
 func (s RestApp) CommentRoute(writer http.ResponseWriter, request *http.Request) {
 	switch request.Method {
 	case "POST":
-		s.CreateComment(writer, request)
+		s.jwtProtect(s.CreateComment, writer, request)
 		return
 	case "DELETE":
-		s.DeleteComment(writer, request)
+		s.jwtProtect(s.DeleteComment, writer, request)
 		return
 	default:
 		http.Error(writer, "Method not allowed", http.StatusMethodNotAllowed)

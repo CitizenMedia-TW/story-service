@@ -7,6 +7,17 @@ import (
 	"strconv"
 )
 
+func (s RestApp) RecommendStoryRoute(writer http.ResponseWriter, request *http.Request) {
+	switch request.Method {
+	case "GET":
+		s.jwtProtect(s.GetRecommendStory, writer, request)
+		return
+	default:
+		http.Error(writer, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+}
+
 func (s RestApp) GetRecommendStory(writer http.ResponseWriter, request *http.Request) {
 	userId := request.Context().Value("userId")
 	if userId == nil {

@@ -2,12 +2,13 @@ package restapp
 
 import (
 	"context"
-	"github.com/google/uuid"
-	"go.uber.org/zap"
 	"net/http"
 	"story-service/internal/helper"
 	"story-service/internal/restapp/contextkeys"
 	"story-service/protobuffs/auth-service"
+
+	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 type RestApp struct {
@@ -25,20 +26,29 @@ func New(authClient auth.AuthServiceClient) RestApp {
 	}
 }
 
-func (s RestApp) middlewares(next http.Handler) http.Handler {
+func (s RestApp) jwtProtect(next http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
+	logger := r.Context().Value(contextkeys.LoggerContextKey{}).(*zap.Logger)
+
+	res, err := s.helper.AuthClient.VerifyToken(context.Background(), &auth.VerifyTokenRequest{Token: r.Header.Get("Authorization")})
+	if err != nil || res.Message == "Failed" {
+		logger.Log(zap.DebugLevel, "verify failed", zap.String("err", err.Error()))
+		http.Error(w, "UnAuthorized", http.StatusUnauthorized)
+		return
+	}
+
+	logger.Log(zap.DebugLevel, "verify success", zap.String("userId", res.JwtContent.Mail))
+	r = r.WithContext(context.WithValue(r.Context(), contextkeys.UserIdContextKey{}, res.JwtContent.Mail))
+	next(w, r)
+	return
+}
+
+func (s RestApp) middleware(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		logger := s.logger.With(zap.String("requestId", uuid.New().String()))
 		logger.Log(zap.DebugLevel, "Executing middleware")
 		r = r.WithContext(context.WithValue(r.Context(), contextkeys.LoggerContextKey{}, logger))
 
-		res, err := s.helper.AuthClient.VerifyToken(context.Background(), &auth.VerifyTokenRequest{Token: r.Header.Get("Authorization")})
-		logger.Log(zap.DebugLevel, "verify token", zap.String("status", res.Message))
-		if err == nil && res.Message != "Failed" {
-			logger.Log(zap.DebugLevel, "verify Success", zap.String("userId", res.JwtContent.Mail))
-			r = r.WithContext(context.WithValue(r.Context(), contextkeys.UserIdContextKey{}, res.JwtContent.Mail))
-		}
-
-		//Allow CORS here By * or specific origin
+		// Allow CORS here By * or specific origin
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, DELETE")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
@@ -57,13 +67,13 @@ func (s RestApp) Routes() http.Handler {
 	mux := http.NewServeMux()
 
 	// Use middleware for all routes
-	mux.Handle("/story", s.middlewares(http.HandlerFunc(s.StoryRoute)))
-	mux.Handle("/search", s.middlewares(http.HandlerFunc(s.SearchRoute)))
-	mux.Handle("/recommend", s.middlewares(http.HandlerFunc(s.GetRecommendStory)))
-	mux.Handle("/comment", s.middlewares(http.HandlerFunc(s.CommentRoute)))
-	mux.Handle("/subComment", s.middlewares(http.HandlerFunc(s.SubCommentRoute)))
-	mux.Handle("/mystory", s.middlewares(http.HandlerFunc(s.MyStoryRoute)))
-	mux.Handle("/latest", s.middlewares(http.HandlerFunc(s.LatestRoute)))
+	mux.HandleFunc("/story", s.middleware(s.StoryRoute))
+	mux.HandleFunc("/search", s.middleware(s.SearchRoute))
+	mux.HandleFunc("/recommend", s.middleware(s.RecommendStoryRoute))
+	mux.HandleFunc("/comment", s.middleware(s.CommentRoute))
+	mux.HandleFunc("/subComment", s.middleware(s.SubCommentRoute))
+	mux.HandleFunc("/mystory", s.middleware(s.MyStoryRoute))
+	mux.HandleFunc("/latest", s.middleware(s.LatestRoute))
 
 	return mux
 }

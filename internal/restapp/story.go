@@ -11,13 +11,13 @@ import (
 func (s RestApp) StoryRoute(writer http.ResponseWriter, request *http.Request) {
 	switch request.Method {
 	case "POST":
-		s.CreateStory(writer, request)
+		s.jwtProtect(s.CreateStory, writer, request)
 		return
 	case "GET":
 		s.GetOneStory(writer, request)
 		return
 	case "DELETE":
-		s.DeleteStory(writer, request)
+		s.jwtProtect(s.DeleteStory, writer, request)
 		return
 	default:
 		http.Error(writer, "Method not allowed", http.StatusMethodNotAllowed)

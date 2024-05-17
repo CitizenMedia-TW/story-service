@@ -9,7 +9,7 @@ import (
 func (s RestApp) MyStoryRoute(writer http.ResponseWriter, request *http.Request) {
 	switch request.Method {
 	case "GET":
-		s.GetMyStory(writer, request)
+		s.jwtProtect(s.GetMyStory, writer, request)
 		return
 	default:
 		http.Error(writer, "Method not allowed", http.StatusMethodNotAllowed)
