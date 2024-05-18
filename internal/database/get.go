@@ -157,16 +157,16 @@ func getStoryQuery(ctx context.Context, database *sql.DB, storyId uuid.UUID) (St
 func getStoryComments(ctx context.Context, database *sql.DB, storyId uuid.UUID) ([]CommentQuery, error) {
 	logger := ctx.Value(contextkeys.LoggerContextKey{}).(*zap.Logger)
 	rows, err := database.QueryContext(ctx, `
-		SELECT c.id,c.content,c.created_at,cu.name,cu.mail,sc.id,sc.content,sc.created_at,scu.name,scu.mail
-FROM
-    story_t s
-    LEFT JOIN comment_t c ON s.id = c.story_id
-    LEFT JOIN user_t cu ON c.user_mail = cu.mail
-    LEFT JOIN subcomment_t sc ON c.id = sc.comment_id
-    LEFT JOIN user_t scu ON sc.user_mail = scu.mail
-WHERE
-    s.id = $1
-`, storyId)
+		SELECT c.id, c.content, c.created_at, cu.name, cu.mail, sc.id, sc.content, sc.created_at, scu.name, scu.mail
+        FROM
+            story_t as s
+            LEFT JOIN comment_t as c ON s.id = c.story_id
+            LEFT JOIN user_t as cu ON c.user_mail = cu.mail
+            LEFT JOIN subcomment_t as sc ON c.id = sc.comment_id
+            LEFT JOIN user_t as scu ON sc.user_mail = scu.mail
+        WHERE s.id = $1`,
+		storyId,
+	)
 	if err != nil {
 		logger.Log(zap.ErrorLevel, "Error preparing statement", zap.Error(err))
 		return []CommentQuery{}, nil
@@ -176,10 +176,10 @@ WHERE
 	comments := make(map[uuid.UUID]CommentQuery)
 	for rows.Next() {
 		var commentId uuid.UUID
-		var commentContent string
-		var commentTime time.Time
-		var commenterName string
-		var commenterId string
+		var commentContent sql.NullString
+		var commentTime sql.NullTime
+		var commenterName sql.NullString
+		var commenterId sql.NullString
 		var subCommentId *uuid.UUID
 		var subCommentContent *string
 		var subCommentTime *time.Time
@@ -195,11 +195,11 @@ WHERE
 			c = CommentQuery{
 				CommentEntity: CommentEntity{
 					Id:          commentId,
-					Content:     commentContent,
-					CreatedAt:   commentTime,
-					CommenterId: commenterId,
+					Content:     commentContent.String,
+					CreatedAt:   commentTime.Time,
+					CommenterId: commenterId.String,
 				},
-				CommenterName: commenterName,
+				CommenterName: commenterName.String,
 			}
 		}
 		if subCommentId != nil {
