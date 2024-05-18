@@ -57,11 +57,11 @@ func (db *SQLDatabase) GetStories(ctx context.Context, skip int32, count int32) 
 	}
 	var results []model.Story
 	for _, story := range stories {
-		comments, err := getStoryComments(ctx, db.database, story.Id)
-		if err != nil {
-			return nil, err
-		}
-		story.Comments = comments
+		// comments, err := getStoryComments(ctx, db.database, story.Id)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		// story.Comments = comments
 		results = append(results, story.ToDomain())
 	}
 	return results, nil
@@ -121,9 +121,6 @@ func getStories(ctx context.Context, database *sql.DB, skip int32, count int32) 
 	}
 	defer rows.Close()
 	var results []StoryQuery
-	if err != nil {
-		return results, err
-	}
 	for rows.Next() {
 		var entity StoryQuery
 		err := rows.Scan(&entity.Id, &entity.Title, &entity.SubTitle, &entity.Content, &entity.CreatedAt, &entity.AuthorName, &entity.AuthorEmail)
