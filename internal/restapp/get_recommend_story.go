@@ -10,7 +10,8 @@ import (
 func (s RestApp) RecommendStoryRoute(writer http.ResponseWriter, request *http.Request) {
 	switch request.Method {
 	case "GET":
-		s.jwtProtect(s.GetRecommendStory, writer, request)
+		// s.jwtProtect(s.GetRecommendStory, writer, request)
+        s.GetRecommendStory(writer, request)
 		return
 	default:
 		http.Error(writer, "Method not allowed", http.StatusMethodNotAllowed)
