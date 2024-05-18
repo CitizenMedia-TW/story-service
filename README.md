@@ -24,6 +24,8 @@
 
 </details>
 
+---
+
 ### Story
 
 <details>
@@ -57,7 +59,7 @@
 <details>
 <summary><code>GET</code> <code><b>/story</b></code> <code>(Get a story by given id)</code></summary>
 
-##### Params
+##### Query Parameters
 
 > | key     | required | data type | description           |
 > | ------- | -------- | --------- | --------------------- |
@@ -123,7 +125,7 @@ type story = {
 > | ------------- | -------------- | ------------- |
 > | Authorization | `Bearer token` | The jwt token |
 
-##### Params
+##### Query Parameters
 
 > | key    | required | data type | description                 |
 > | ------ | -------- | --------- | --------------------------- |
@@ -247,5 +249,29 @@ type story = {
 > | ------------------ | ------------------ | ------------------------ |
 > | `200`              | `application/json` | `{"message": "Success"}` |
 > | `400`, `401`, 500` | `text/plain`       | N/A                      |
+
+</details>
+
+---
+
+### Search
+
+<details>
+<summary><code>GET</code> <code><b>/search</b></code> <code>(Search for the stories)</code></summary>
+
+##### Query Parameters
+
+> | key   | required | data type | description                 |
+> | ----- | -------- | --------- | --------------------------- |
+> | tag   | true     | string    | Tag for searching           |
+> | count | true     | int       | Number of story to retrieve |
+> | skip  | true     | int       | --                          |
+
+##### Responses
+
+> | http code | content-type       | response                                                   |
+> | --------- | ------------------ | ---------------------------------------------------------- |
+> | `200`     | `application/json` | `{"message": "Success", "storyIdList: string list of ids}` |
+> | `500`     | `text/plain`       | N/A                                                        |
 
 </details>
