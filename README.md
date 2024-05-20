@@ -197,6 +197,24 @@ type story = {
 
 </details>
 
+<details>
+<summary><code>GET</code> <code><b>/comment</b></code> <code>(Get comments from specific story)</code></summary>
+
+##### Query Parameters
+
+> | key     | required | data type | description |
+> | ------- | -------- | --------- | ----------- |
+> | storyId | true     | string    | N/A         |
+
+##### Responses
+
+> | http code | content-type       | response                                               |
+> | --------- | ------------------ | ------------------------------------------------------ |
+> | `200`     | `application/json` | `{"message": "Success", "comments": list of comments}` |
+> | `500`     | `text/plain`       | N/A                                                    |
+
+</details>
+
 ---
 
 ### SubComment
@@ -215,8 +233,9 @@ type story = {
 > | key              | required | data type | description                |
 > | ---------------- | -------- | --------- | -------------------------- |
 > | content          | true     | string    | The content of the comment |
-> | commenterId      | true     | string    | The id of the commenter    |
+> | commenterId      | false    | string    | The id of the commenter    |
 > | repliedCommentId | true     | string    | The comment to comment on  |
+> | storyId          | true     | string    | The storyid of the comment |
 
 ##### Responses
 
