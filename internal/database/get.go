@@ -90,6 +90,26 @@ func (db *SQLDatabase) GetUserStoryId(ctx context.Context, userEmail string) ([]
 	return storyIds, err
 }
 
+func (db *SQLDatabase) GetComments(ctx context.Context, storyId string) ([]model.Comment, error) {
+	storyIdUUID, err := uuid.Parse(storyId)
+	if err != nil {
+		return nil, err
+	}
+	comments, err := getStoryComments(ctx, db.database, storyIdUUID)
+	if err != nil {
+		return nil, err
+	}
+	var result []model.Comment = make([]model.Comment, len(comments))
+	for i, comment := range comments {
+		result[i] = comment.ToDomain()
+		result[i].SubComments = make([]model.SubComment, len(comment.SubComments))
+		for j, subComment := range comment.SubComments {
+			result[i].SubComments[j] = subComment.ToDomain()
+		}
+	}
+	return result, nil
+}
+
 func getStoryTags(ctx context.Context, database *sql.DB, storyId uuid.UUID) ([]string, error) {
 	rows, err := database.QueryContext(ctx, `
 		SELECT tag FROM story_tag_t WHERE story_id = $1

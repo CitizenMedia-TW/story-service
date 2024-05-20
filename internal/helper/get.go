@@ -97,3 +97,36 @@ func (h *Helper) GetLatestStories(ctx context.Context) (*story.GetLatestStoriesR
 func (h *Helper) GetStoryByTag(ctx context.Context, tag string, limit int64, offset int64) ([]string, error) {
 	return h.database.GetStoryIdsByTag(ctx, tag, limit, offset)
 }
+
+func (h *Helper) GetCommentsByStoryId(ctx context.Context, storyId string) (*story.GetCommentsByStoryIdResponse, error) {
+	res, err := h.database.GetComments(ctx, storyId)
+	if err != nil {
+		return nil, err
+	}
+	var comments []*story.Comment = make([]*story.Comment, len(res))
+	for i, c := range res {
+		var subComments []*story.SubComment = make([]*story.SubComment, len(c.SubComments))
+		for j, sc := range c.SubComments {
+			subComments[j] = &story.SubComment{
+				Id:               sc.Id,
+				Content:          sc.Content,
+				Commenter:        sc.CommenterName,
+				CommenterId:      sc.CommenterId,
+				Time:             timestamppb.New(sc.CreatedAt),
+				RepliedCommentId: c.Id,
+			}
+		}
+		comments[i] = &story.Comment{
+			Id:          c.Id,
+			Content:     c.Content,
+			Commenter:   c.CommenterName,
+			CommenterId: c.CommenterId,
+			Time:        timestamppb.New(c.CreatedAt),
+			SubComments: subComments,
+		}
+	}
+	return &story.GetCommentsByStoryIdResponse{
+		Message:  "Success",
+		Comments: comments,
+	}, nil
+}

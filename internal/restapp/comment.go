@@ -10,6 +10,8 @@ import (
 
 func (s RestApp) CommentRoute(writer http.ResponseWriter, request *http.Request) {
 	switch request.Method {
+	case "GET":
+		s.GetComment(writer, request)
 	case "POST":
 		s.jwtProtect(s.CreateComment, writer, request)
 		return
@@ -20,6 +22,24 @@ func (s RestApp) CommentRoute(writer http.ResponseWriter, request *http.Request)
 		http.Error(writer, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+}
+
+func (s RestApp) GetComment(w http.ResponseWriter, r *http.Request) {
+	storyId := r.URL.Query().Get("storyId")
+	in := &story.GetCommentsByStoryIdRequest{
+		StoryId: storyId,
+	}
+	res, err := s.helper.GetCommentsByStoryId(r.Context(), in.StoryId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = json.NewEncoder(w).Encode(res)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	return
 }
 
 func (s RestApp) DeleteComment(writer http.ResponseWriter, request *http.Request) {
