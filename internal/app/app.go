@@ -7,7 +7,7 @@ import (
 	"net"
 	"net/http"
 	"story-service/internal/restapp"
-	"story-service/protobuffs/auth-service"
+	"story-service/protobuffs/jwt-service"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -22,9 +22,9 @@ func StartServer() {
 	if err != nil {
 		panic(err)
 	}
-	authClient := auth.NewAuthServiceClient(grpcClient)
+	jwtClient := jwt.NewJWTServiceClient(grpcClient)
 
-	restServer := restapp.New(authClient)
+	restServer := restapp.New(jwtClient)
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {

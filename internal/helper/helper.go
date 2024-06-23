@@ -2,15 +2,15 @@ package helper
 
 import (
 	"story-service/internal/database"
-	"story-service/protobuffs/auth-service"
+	"story-service/protobuffs/jwt-service"
 )
 
 type Helper struct {
 	database   database.SQLDatabase
-	AuthClient auth.AuthServiceClient
+	JWTClient jwt.JWTServiceClient
 }
 
-func New(authClient auth.AuthServiceClient) Helper {
+func New(authClient jwt.JWTServiceClient) Helper {
 	db := database.NewPostgresConn()
 
 	// grpcClient, err := grpc.Dial("157.230.46.45:50052", grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -20,6 +20,6 @@ func New(authClient auth.AuthServiceClient) Helper {
 
 	return Helper{
 		database:   db,
-		AuthClient: authClient,
+		JWTClient: authClient,
 	}
 }

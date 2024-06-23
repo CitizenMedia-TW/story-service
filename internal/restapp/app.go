@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"story-service/internal/helper"
 	"story-service/internal/restapp/contextkeys"
-	"story-service/protobuffs/auth-service"
+	"story-service/protobuffs/jwt-service"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -16,7 +16,7 @@ type RestApp struct {
 	logger *zap.Logger
 }
 
-func New(authClient auth.AuthServiceClient) RestApp {
+func New(authClient jwt.JWTServiceClient) RestApp {
 	h := helper.New(authClient)
 	logger, _ := zap.NewDevelopment()
 
@@ -29,7 +29,7 @@ func New(authClient auth.AuthServiceClient) RestApp {
 func (s RestApp) jwtProtect(next http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
 	logger := r.Context().Value(contextkeys.LoggerContextKey{}).(*zap.Logger)
 
-	res, err := s.helper.AuthClient.VerifyToken(context.Background(), &auth.VerifyTokenRequest{Token: r.Header.Get("Authorization")})
+	res, err := s.helper.JWTClient.VerifyToken(context.Background(), &jwt.VerifyTokenRequest{Token: r.Header.Get("Authorization")})
 	if err != nil || res.Message == "Failed" {
 		logger.Log(zap.DebugLevel, "verify failed", zap.String("err", err.Error()))
 		http.Error(w, "UnAuthorized", http.StatusUnauthorized)
